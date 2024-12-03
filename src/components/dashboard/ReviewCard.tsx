@@ -18,7 +18,6 @@ import {
   PencilIcon,
   CheckIcon,
   ClockIcon,
-  GlobeIcon,
   CircleDotIcon,
   SearchIcon,
   PhoneIcon,
@@ -144,9 +143,21 @@ const ReviewCard = ({
   const getSourceIcon = (source: string) => {
     switch (source) {
       case "google":
-        return <GlobeIcon className="w-4 h-4 text-blue-500" />;
+        return (
+          <img
+            src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg"
+            alt="Google"
+            className="w-4 h-4"
+          />
+        );
       case "yelp":
-        return <CircleDotIcon className="w-4 h-4 text-red-500" />;
+        return (
+          <img
+            src="https://upload.wikimedia.org/wikipedia/commons/a/ad/Yelp_Logo.svg"
+            alt="Yelp"
+            className="w-4 h-4"
+          />
+        );
       default:
         return null;
     }

@@ -1,6 +1,7 @@
 import React from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -9,13 +10,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import {
   SmileIcon,
+  MehIcon,
   FrownIcon,
-  StarIcon,
   MailIcon,
   MessageSquareIcon,
-  ArrowRightIcon,
+  PencilIcon,
+  PhoneIcon,
   ExternalLinkIcon,
 } from "lucide-react";
+import EmailTemplateEditor from "./EmailTemplateEditor";
 
 interface FeedbackManagerProps {
   className?: string;
@@ -24,12 +27,84 @@ interface FeedbackManagerProps {
 const FeedbackManager = ({ className = "" }: FeedbackManagerProps) => {
   const [emailEnabled, setEmailEnabled] = React.useState(true);
   const [smsEnabled, setSmsEnabled] = React.useState(true);
-  const [autoRedirect, setAutoRedirect] = React.useState(true);
+  const [isTemplateEditorOpen, setIsTemplateEditorOpen] = React.useState(false);
+  const [showEmailPreview, setShowEmailPreview] = React.useState(false);
+  const [showSMSPreview, setShowSMSPreview] = React.useState(false);
+
+  const renderEmailPreview = () => (
+    <div className="p-4 border rounded-lg space-y-4">
+      <div className="flex justify-between items-center">
+        <h4 className="text-sm font-medium">Email Preview</h4>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setShowEmailPreview(false)}
+        >
+          ×
+        </Button>
+      </div>
+      <div className="space-y-4 bg-white p-4 rounded shadow-sm">
+        <div className="flex justify-center gap-8">
+          <Button
+            variant="ghost"
+            className="flex-col gap-2 hover:bg-green-50"
+            onClick={() => window.open("https://g.page/review/...", "_blank")}
+          >
+            <SmileIcon className="w-8 h-8 text-green-500" />
+            <span className="text-sm">Great!</span>
+          </Button>
+          <Button
+            variant="ghost"
+            className="flex-col gap-2 hover:bg-yellow-50"
+            onClick={() => window.open("https://feedback/...", "_blank")}
+          >
+            <MehIcon className="w-8 h-8 text-yellow-500" />
+            <span className="text-sm">Okay</span>
+          </Button>
+          <Button
+            variant="ghost"
+            className="flex-col gap-2 hover:bg-red-50"
+            onClick={() => window.open("https://feedback/...", "_blank")}
+          >
+            <FrownIcon className="w-8 h-8 text-red-500" />
+            <span className="text-sm">Not Good</span>
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderSMSPreview = () => (
+    <div className="p-4 border rounded-lg space-y-4">
+      <div className="flex justify-between items-center">
+        <h4 className="text-sm font-medium">SMS Preview</h4>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setShowSMSPreview(false)}
+        >
+          ×
+        </Button>
+      </div>
+      <div className="space-y-4">
+        <div className="bg-muted p-3 rounded-lg max-w-[80%]">
+          Hi John, how was your experience at Acme Inc? Reply with a number 1-5
+          (1=poor, 5=excellent)
+        </div>
+        <div className="bg-primary/10 p-3 rounded-lg max-w-[80%] ml-auto">
+          5
+        </div>
+        <div className="bg-muted p-3 rounded-lg max-w-[80%]">
+          Thanks for the great rating! Would you mind sharing your experience on
+          Google? https://g.page/review/...
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <Card className={`p-6 bg-background ${className}`}>
       <div className="space-y-6">
-        {/* Header */}
         <div>
           <h3 className="text-lg font-semibold">Feedback Collection</h3>
           <p className="text-sm text-muted-foreground">
@@ -41,15 +116,14 @@ const FeedbackManager = ({ className = "" }: FeedbackManagerProps) => {
           <TabsList>
             <TabsTrigger value="email">
               <MailIcon className="w-4 h-4 mr-2" />
-              Email Templates
+              Email Template
             </TabsTrigger>
             <TabsTrigger value="sms">
               <MessageSquareIcon className="w-4 h-4 mr-2" />
-              SMS Templates
+              SMS Template
             </TabsTrigger>
           </TabsList>
 
-          {/* Email Templates */}
           <TabsContent value="email" className="space-y-6">
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
@@ -65,179 +139,141 @@ const FeedbackManager = ({ className = "" }: FeedbackManagerProps) => {
             </div>
 
             <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>Email Subject</Label>
-                <Input
-                  placeholder="How was your experience with {business}?"
-                  disabled={!emailEnabled}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Happy Face Button</Label>
-                  <div className="p-4 border rounded-lg space-y-2">
-                    <div className="flex items-center gap-2">
-                      <SmileIcon className="w-5 h-5 text-green-500" />
-                      <Input
-                        placeholder="Great!"
-                        className="flex-1"
-                        disabled={!emailEnabled}
-                      />
-                    </div>
-                    <ArrowRightIcon className="w-4 h-4 text-muted-foreground mx-auto" />
-                    <div className="flex items-center gap-2">
-                      <ExternalLinkIcon className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-sm text-muted-foreground">
-                        Redirect to Google Review
-                      </span>
+              <div className="p-4 border rounded-lg space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <MailIcon className="w-5 h-5 text-primary" />
+                    <div>
+                      <p className="text-sm font-medium">
+                        Feedback Request Email
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Sent after customer interaction
+                      </p>
                     </div>
                   </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Sad Face Button</Label>
-                  <div className="p-4 border rounded-lg space-y-2">
-                    <div className="flex items-center gap-2">
-                      <FrownIcon className="w-5 h-5 text-red-500" />
-                      <Input
-                        placeholder="Not Great"
-                        className="flex-1"
-                        disabled={!emailEnabled}
-                      />
-                    </div>
-                    <ArrowRightIcon className="w-4 h-4 text-muted-foreground mx-auto" />
-                    <div className="flex items-center gap-2">
-                      <MessageSquareIcon className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-sm text-muted-foreground">
-                        Show Feedback Form
-                      </span>
-                    </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowEmailPreview(!showEmailPreview)}
+                    >
+                      {showEmailPreview ? "Hide Preview" : "Show Preview"}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsTemplateEditorOpen(true)}
+                    >
+                      <PencilIcon className="w-4 h-4 mr-2" />
+                      Edit Template
+                    </Button>
                   </div>
                 </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Email Body Template</Label>
-                <Textarea
-                  placeholder="Dear {name},\n\nThank you for choosing {business}. We'd love to hear about your experience!"
-                  className="min-h-[100px]"
-                  disabled={!emailEnabled}
-                />
+                {showEmailPreview && renderEmailPreview()}
               </div>
             </div>
           </TabsContent>
 
-          {/* SMS Templates */}
           <TabsContent value="sms" className="space-y-6">
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label>SMS Feedback Collection</Label>
                 <p className="text-sm text-muted-foreground">
-                  Send automated SMS requests with star rating system
+                  Send automated SMS requests with rating system
                 </p>
               </div>
               <Switch checked={smsEnabled} onCheckedChange={setSmsEnabled} />
             </div>
 
             <div className="space-y-4">
+              <div className="p-4 border rounded-lg space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <PhoneIcon className="w-5 h-5 text-primary" />
+                    <div>
+                      <p className="text-sm font-medium">SMS Rating Request</p>
+                      <p className="text-sm text-muted-foreground">
+                        1-5 rating collection via text
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowSMSPreview(!showSMSPreview)}
+                  >
+                    {showSMSPreview ? "Hide Preview" : "Show Preview"}
+                  </Button>
+                </div>
+                {showSMSPreview && renderSMSPreview()}
+              </div>
+
               <div className="space-y-2">
-                <Label>Initial SMS Template</Label>
+                <Label>Initial Message</Label>
                 <Textarea
-                  placeholder="Hi {name}, please rate your experience at {business} from 1-5 stars by replying with a number."
+                  placeholder="Hi {name}, how was your experience at {business}? Reply with a number 1-5 (1=poor, 5=excellent)"
                   className="min-h-[100px]"
                   disabled={!smsEnabled}
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>High Rating Response (4-5 ★)</Label>
-                  <div className="p-4 border rounded-lg space-y-2">
-                    <div className="flex items-center gap-1">
-                      <StarIcon className="w-4 h-4 text-yellow-400 fill-current" />
-                      <StarIcon className="w-4 h-4 text-yellow-400 fill-current" />
-                      <StarIcon className="w-4 h-4 text-yellow-400 fill-current" />
-                      <StarIcon className="w-4 h-4 text-yellow-400 fill-current" />
-                      <StarIcon className="w-4 h-4 text-yellow-400 fill-current" />
-                    </div>
-                    <Textarea
-                      placeholder="Thanks for the great rating! Would you mind sharing your experience on Google? {review_link}"
-                      className="min-h-[100px]"
-                      disabled={!smsEnabled}
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Low Rating Response (1-3 ★)</Label>
-                  <div className="p-4 border rounded-lg space-y-2">
-                    <div className="flex items-center gap-1">
-                      <StarIcon className="w-4 h-4 text-yellow-400 fill-current" />
-                      <StarIcon className="w-4 h-4 text-yellow-400 fill-current" />
-                      <StarIcon className="w-4 h-4 text-gray-300" />
-                      <StarIcon className="w-4 h-4 text-gray-300" />
-                      <StarIcon className="w-4 h-4 text-gray-300" />
-                    </div>
-                    <Textarea
-                      placeholder="We're sorry to hear that. Please let us know how we can improve: {feedback_link}"
-                      className="min-h-[100px]"
-                      disabled={!smsEnabled}
-                    />
-                  </div>
+              <div className="space-y-2">
+                <Label>Follow-up Messages</Label>
+                <div className="grid gap-4">
+                  <Textarea
+                    placeholder="Thanks for the great rating! Would you mind sharing your experience on Google? {review_link}"
+                    className="min-h-[100px]"
+                    disabled={!smsEnabled}
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    This message is sent for ratings 4-5
+                  </p>
+                  <Textarea
+                    placeholder="We're sorry to hear that. Please let us know how we can improve: {feedback_link}"
+                    className="min-h-[100px]"
+                    disabled={!smsEnabled}
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    This message is sent for ratings 1-3
+                  </p>
                 </div>
               </div>
             </div>
           </TabsContent>
         </Tabs>
 
-        <Separator />
-
-        {/* Global Settings */}
-        <div className="space-y-4">
-          <h4 className="text-sm font-medium">Feedback Flow Settings</h4>
-
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Automatic Platform Redirect</Label>
-                <p className="text-sm text-muted-foreground">
-                  Automatically redirect satisfied customers to leave reviews
-                </p>
-              </div>
-              <Switch
-                checked={autoRedirect}
-                onCheckedChange={setAutoRedirect}
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Positive Feedback Threshold</Label>
-                <div className="flex items-center gap-2">
-                  <Input type="number" placeholder="4" className="w-20" />
-                  <span className="text-sm text-muted-foreground">
-                    stars and above
-                  </span>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Review Platform Priority</Label>
-                <div className="flex items-center gap-2">
-                  <Input value="Google" className="flex-1" readOnly />
-                  <Input value="Yelp" className="flex-1" readOnly />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Save Button */}
         <div className="flex justify-end">
           <Button>Save Changes</Button>
         </div>
       </div>
+
+      <Dialog
+        open={isTemplateEditorOpen}
+        onOpenChange={setIsTemplateEditorOpen}
+      >
+        <DialogContent className="max-w-6xl h-[80vh] overflow-hidden">
+          <EmailTemplateEditor
+            defaultTemplate={{
+              id: "1",
+              name: "Feedback Request Email",
+              subject: "How was your experience?",
+              content:
+                "Dear {name},\n\nThank you for choosing {business}. We'd love to hear about your experience!\n\nPlease click one of the buttons below to share your feedback.\n\nBest regards,\n{business_name}",
+              style: {
+                backgroundColor: "#ffffff",
+                textColor: "#333333",
+                accentColor: "#FF6B2B",
+                fontFamily: "Arial",
+                fontSize: "16px",
+                buttonStyle: "rounded",
+                showSocialLinks: false,
+              },
+            }}
+            onSave={() => setIsTemplateEditorOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };
