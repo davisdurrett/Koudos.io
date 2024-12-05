@@ -1,7 +1,6 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -13,116 +12,77 @@ import {
 import {
   BarChart3Icon,
   StarIcon,
-  ClockIcon,
   TrendingUpIcon,
   MessageSquareIcon,
-  UsersIcon,
+  ArrowRightIcon,
+  ClockIcon,
+  MailIcon,
 } from "lucide-react";
 import MetricsGrid from "./MetricsGrid";
 import TrendsChart from "./TrendsChart";
-import IncentiveTracker from "./IncentiveTracker";
-import CompetitorBenchmark from "./CompetitorBenchmark";
-import EscalationManager from "./EscalationManager";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts";
 
 interface AnalyticsPanelProps {
   className?: string;
-  metrics?: Array<{
-    title: string;
-    value: string | number;
-    change?: string;
-    trend?: "up" | "down" | "neutral";
-    icon: React.ReactNode;
-  }>;
-  trends?: {
-    ratings: Array<{
-      date: string;
-      value: number;
-    }>;
-    sentiment: Array<{
-      date: string;
-      positive: number;
-      neutral: number;
-      negative: number;
-    }>;
-  };
 }
 
-const AnalyticsPanel = ({
-  className = "",
-  metrics = [
-    {
-      title: "Average Rating",
-      value: "4.8",
-      change: "+0.2 this month",
-      trend: "up",
-      icon: <StarIcon className="w-5 h-5 text-yellow-500" />,
-    },
-    {
-      title: "Total Reviews",
-      value: "1,284",
-      change: "+48 this month",
-      trend: "up",
-      icon: <MessageSquareIcon className="w-5 h-5 text-blue-500" />,
-    },
-    {
-      title: "Response Rate",
-      value: "95%",
-      change: "+5% this month",
-      trend: "up",
-      icon: <ClockIcon className="w-5 h-5 text-green-500" />,
-    },
-    {
-      title: "Customer Sentiment",
-      value: "78%",
-      change: "+3% this month",
-      trend: "up",
-      icon: <TrendingUpIcon className="w-5 h-5 text-purple-500" />,
-    },
-    {
-      title: "Active Customers",
-      value: "856",
-      change: "+12 this month",
-      trend: "up",
-      icon: <UsersIcon className="w-5 h-5 text-orange-500" />,
-    },
-    {
-      title: "Review Conversion",
-      value: "32%",
-      change: "+2% this month",
-      trend: "up",
-      icon: <BarChart3Icon className="w-5 h-5 text-pink-500" />,
-    },
-  ],
-  trends = {
-    ratings: [
-      { date: "2024-01", value: 4.2 },
-      { date: "2024-02", value: 4.5 },
-      { date: "2024-03", value: 4.8 },
-    ],
-    sentiment: [
-      { date: "2024-01", positive: 65, neutral: 25, negative: 10 },
-      { date: "2024-02", positive: 70, neutral: 20, negative: 10 },
-      { date: "2024-03", positive: 75, neutral: 20, negative: 5 },
-    ],
-  },
-}: AnalyticsPanelProps) => {
-  const [activeTab, setActiveTab] = React.useState("overview");
+const SENTIMENT_COLORS = {
+  positive: "#22c55e",
+  neutral: "#f59e0b",
+  negative: "#ef4444",
+};
+
+const AnalyticsPanel = ({ className = "" }: AnalyticsPanelProps) => {
   const [timeRange, setTimeRange] = React.useState("30d");
 
+  const sentimentData = [
+    { name: "Positive", value: 65, color: SENTIMENT_COLORS.positive },
+    { name: "Neutral", value: 25, color: SENTIMENT_COLORS.neutral },
+    { name: "Negative", value: 10, color: SENTIMENT_COLORS.negative },
+  ];
+
+  const trendData = [
+    { date: "Jan", rating: 4.2, reviews: 42 },
+    { date: "Feb", rating: 4.5, reviews: 48 },
+    { date: "Mar", rating: 4.6, reviews: 52 },
+    { date: "Apr", rating: 4.8, reviews: 58 },
+    { date: "May", rating: 4.7, reviews: 55 },
+    { date: "Jun", rating: 4.9, reviews: 62 },
+  ];
+
   return (
-    <div className={cn("h-full bg-background p-6", className)}>
+    <div
+      className={cn(
+        "h-full bg-background p-6 space-y-6 overflow-auto",
+        className,
+      )}
+    >
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
+      <div className="flex items-center justify-between">
+        <div className="space-y-1">
           <h2 className="text-2xl font-semibold tracking-tight">Analytics</h2>
           <p className="text-sm text-muted-foreground">
             Monitor your review performance and trends
           </p>
         </div>
-        <div className="flex items-center gap-4">
-          <Select value={timeRange} onValueChange={setTimeRange}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Select time range" />
+
+        {/* Time Range Selector */}
+        <div className="flex items-center gap-2">
+          <Select defaultValue={timeRange} onValueChange={setTimeRange}>
+            <SelectTrigger className="w-[120px]">
+              <SelectValue placeholder="Time Range" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="7d">Last 7 days</SelectItem>
@@ -138,95 +98,188 @@ const AnalyticsPanel = ({
         </div>
       </div>
 
-      {/* Content Tabs */}
-      <Tabs
-        value={activeTab}
-        onValueChange={setActiveTab}
-        className="space-y-6"
-      >
-        <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="trends">Trends</TabsTrigger>
-          <TabsTrigger value="incentives">Incentives</TabsTrigger>
-          <TabsTrigger value="escalations">Escalations</TabsTrigger>
-          <TabsTrigger value="competitors">Competitors</TabsTrigger>
-        </TabsList>
+      {/* Review Performance */}
+      <div>
+        <h3 className="text-lg font-medium mb-4">Review Performance</h3>
+        <MetricsGrid
+          metrics={[
+            {
+              title: "Average Rating",
+              value: "4.8",
+              change: "+0.2 this month",
+              trend: "up",
+              icon: <StarIcon className="w-5 h-5 text-yellow-500" />,
+            },
+            {
+              title: "Total Reviews",
+              value: "1,284",
+              change: "+48 this month",
+              trend: "up",
+              icon: <MessageSquareIcon className="w-5 h-5 text-blue-500" />,
+            },
+            {
+              title: "Customer Sentiment",
+              value: "78%",
+              change: "+3% this month",
+              trend: "up",
+              icon: <TrendingUpIcon className="w-5 h-5 text-purple-500" />,
+            },
+            {
+              title: "Response Time",
+              value: "2.4h",
+              change: "-0.3h this month",
+              trend: "up",
+              icon: <ClockIcon className="w-5 h-5 text-green-500" />,
+            },
+          ]}
+        />
+      </div>
 
-        <TabsContent value="overview" className="space-y-6">
-          <MetricsGrid metrics={metrics} />
-          <div className="grid grid-cols-2 gap-6">
-            <Card className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium">Rating Distribution</h3>
-                <Select defaultValue="all">
-                  <SelectTrigger className="w-[120px]">
-                    <SelectValue placeholder="Filter" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Sources</SelectItem>
-                    <SelectItem value="google">Google</SelectItem>
-                    <SelectItem value="yelp">Yelp</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <TrendsChart data={trends} type="distribution" />
-            </Card>
-            <Card className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium">Response Performance</h3>
-                <Select defaultValue="response_time">
-                  <SelectTrigger className="w-[140px]">
-                    <SelectValue placeholder="Metric" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="response_time">Response Time</SelectItem>
-                    <SelectItem value="response_rate">Response Rate</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <TrendsChart data={trends} type="response" />
-            </Card>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="trends" className="space-y-6">
-          <div className="grid grid-cols-1 gap-6">
-            <Card className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium">Review Trends</h3>
-                <div className="flex items-center gap-2">
-                  <Select defaultValue="rating">
-                    <SelectTrigger className="w-[120px]">
-                      <SelectValue placeholder="Metric" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="rating">Rating</SelectItem>
-                      <SelectItem value="volume">Volume</SelectItem>
-                      <SelectItem value="sentiment">Sentiment</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Button variant="outline" size="icon">
-                    <BarChart3Icon className="w-4 h-4" />
-                  </Button>
+      {/* Campaign Performance */}
+      <div>
+        <h3 className="text-lg font-medium mb-4">Campaign Performance</h3>
+        <div className="grid grid-cols-2 gap-6">
+          {/* Email Campaign */}
+          <div className="grid grid-cols-2 gap-4">
+            <Card className="p-4">
+              <div className="flex items-center gap-4">
+                <div className="p-2 bg-blue-100 rounded-full">
+                  <MailIcon className="w-5 h-5 text-blue-500" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium">Total Emails</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-2xl font-semibold">2,847</p>
+                    <span className="text-xs text-green-600">+156</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">this month</p>
                 </div>
               </div>
-              <TrendsChart data={trends} type="trends" />
+            </Card>
+            <Card className="p-4">
+              <div className="flex items-center gap-4">
+                <div className="p-2 bg-purple-100 rounded-full">
+                  <ArrowRightIcon className="w-5 h-5 text-purple-500" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium">Email Conversion</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-2xl font-semibold">42%</p>
+                    <span className="text-xs text-green-600">+3%</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">this month</p>
+                </div>
+              </div>
             </Card>
           </div>
-        </TabsContent>
 
-        <TabsContent value="incentives" className="space-y-6">
-          <IncentiveTracker />
-        </TabsContent>
+          {/* SMS Campaign */}
+          <div className="grid grid-cols-2 gap-4">
+            <Card className="p-4">
+              <div className="flex items-center gap-4">
+                <div className="p-2 bg-blue-100 rounded-full">
+                  <MessageSquareIcon className="w-5 h-5 text-blue-500" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium">Total SMS</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-2xl font-semibold">1,563</p>
+                    <span className="text-xs text-green-600">+89</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">this month</p>
+                </div>
+              </div>
+            </Card>
+            <Card className="p-4">
+              <div className="flex items-center gap-4">
+                <div className="p-2 bg-purple-100 rounded-full">
+                  <ArrowRightIcon className="w-5 h-5 text-purple-500" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium">SMS Conversion</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-2xl font-semibold">38%</p>
+                    <span className="text-xs text-green-600">+2%</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">this month</p>
+                </div>
+              </div>
+            </Card>
+          </div>
+        </div>
+      </div>
 
-        <TabsContent value="escalations" className="space-y-6">
-          <EscalationManager />
-        </TabsContent>
+      {/* Charts */}
+      <div className="grid grid-cols-4 gap-6">
+        {/* Sentiment Distribution */}
+        <Card className="p-6 col-span-1">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-medium">Sentiment Distribution</h3>
+          </div>
+          <div className="h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={sentimentData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={80}
+                  paddingAngle={5}
+                  dataKey="value"
+                >
+                  {sentimentData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
 
-        <TabsContent value="competitors" className="space-y-6">
-          <CompetitorBenchmark />
-        </TabsContent>
-      </Tabs>
+        {/* Rating Trends */}
+        <Card className="p-6 col-span-3">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-medium">Rating Trends</h3>
+            <Select defaultValue="rating">
+              <SelectTrigger className="w-[120px]">
+                <SelectValue placeholder="Metric" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="rating">Rating</SelectItem>
+                <SelectItem value="volume">Volume</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={trendData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Line
+                  type="monotone"
+                  dataKey="rating"
+                  name="Avg Rating"
+                  stroke="#22c55e"
+                  strokeWidth={2}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="reviews"
+                  name="Reviews"
+                  stroke="#8b5cf6"
+                  strokeWidth={2}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
+      </div>
     </div>
   );
 };

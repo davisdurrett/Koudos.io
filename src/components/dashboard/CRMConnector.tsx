@@ -2,6 +2,9 @@ import React from "react";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -9,240 +12,107 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  LinkIcon,
-  PlusIcon,
-  RefreshCwIcon,
-  CheckCircleIcon,
-  XCircleIcon,
-} from "lucide-react";
-import { crmService } from "@/lib/services/crm";
-import { useToast } from "@/components/ui/use-toast";
+import { DatabaseIcon, CheckCircleIcon } from "lucide-react";
 
 interface CRMConnectorProps {
   className?: string;
-  onConnect?: (connectionId: string) => void;
-  isConnecting?: boolean;
 }
 
-const CRMConnector = ({
-  className = "",
-  onConnect = () => {},
-  isConnecting = false,
-}: CRMConnectorProps) => {
-  const { toast } = useToast();
-  const [platform, setPlatform] = React.useState("hubspot");
+const CRMConnector = ({ className }: CRMConnectorProps) => {
+  const [isConnected, setIsConnected] = React.useState(false);
+  const [selectedCRM, setSelectedCRM] = React.useState<string>("");
   const [apiKey, setApiKey] = React.useState("");
-  const [domain, setDomain] = React.useState("");
-  const [connecting, setConnecting] = React.useState(false);
-  const [connections, setConnections] = React.useState<
-    Array<{
-      id: string;
-      platform: string;
-      status: "connected" | "disconnected" | "error";
-      lastSync?: string;
-    }>
-  >([]);
 
-  // Load existing connections
-  React.useEffect(() => {
-    loadConnections();
-  }, []);
-
-  const loadConnections = async () => {
-    try {
-      const existingConnections = await crmService.getAllConnections();
-      setConnections(existingConnections);
-    } catch (error) {
-      console.error("Failed to load connections:", error);
+  const handleConnect = () => {
+    if (selectedCRM && apiKey) {
+      setIsConnected(true);
     }
   };
 
-  const handleConnect = async () => {
-    try {
-      setConnecting(true);
-      const connection = await crmService.connect({ platform, apiKey, domain });
-
-      // Update connections list
-      setConnections((prev) => [...prev, connection]);
-
-      // Clear form
-      setApiKey("");
-      setDomain("");
-
-      // Notify success
-      toast({
-        title: "CRM Connected",
-        description: `Successfully connected to ${platform}`,
-        variant: "default",
-      });
-
-      // Callback
-      onConnect(connection.id);
-    } catch (error) {
-      toast({
-        title: "Connection Failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setConnecting(false);
-    }
-  };
-
-  const handleDisconnect = async (connectionId: string) => {
-    try {
-      await crmService.disconnect(connectionId);
-      await loadConnections(); // Reload connections
-
-      toast({
-        title: "CRM Disconnected",
-        description: "Successfully disconnected CRM integration",
-        variant: "default",
-      });
-    } catch (error) {
-      toast({
-        title: "Disconnection Failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
+  const handleDisconnect = () => {
+    setIsConnected(false);
+    setSelectedCRM("");
+    setApiKey("");
   };
 
   return (
-    <Card className={cn("w-[600px] p-6 bg-background", className)}>
+    <Card className={cn("p-6", className)}>
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center gap-2">
-          <div className="p-2 rounded-full bg-primary/10">
-            <LinkIcon className="w-5 h-5 text-primary" />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <DatabaseIcon className="w-6 h-6 text-blue-600" />
+            </div>
+            <div>
+              <h3 className="font-semibold">CRM Integration</h3>
+              <p className="text-sm text-muted-foreground">
+                Connect your CRM to sync customer data
+              </p>
+            </div>
           </div>
-          <div>
-            <h3 className="text-lg font-semibold">Connect CRM Platform</h3>
-            <p className="text-sm text-muted-foreground">
-              Link your CRM system to automate review collection
-            </p>
-          </div>
+          {isConnected ? (
+            <Badge className="bg-green-100 text-green-800">Connected</Badge>
+          ) : (
+            <Badge variant="outline">Not Connected</Badge>
+          )}
         </div>
 
-        {/* Existing Connections */}
-        {connections.length > 0 && (
-          <div className="space-y-3">
-            <h4 className="text-sm font-medium">Active Connections</h4>
-            {connections.map((conn) => (
-              <div
-                key={conn.id}
-                className="flex items-center justify-between p-3 border rounded-lg"
-              >
-                <div className="flex items-center gap-3">
-                  {conn.status === "connected" ? (
-                    <CheckCircleIcon className="w-5 h-5 text-green-500" />
-                  ) : (
-                    <XCircleIcon className="w-5 h-5 text-red-500" />
-                  )}
-                  <div>
-                    <p className="font-medium capitalize">{conn.platform}</p>
-                    <p className="text-sm text-muted-foreground">
-                      Last synced:{" "}
-                      {new Date(conn.lastSync || "").toLocaleString()}
-                    </p>
-                  </div>
+        {isConnected ? (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+              <div className="flex items-center gap-3">
+                <CheckCircleIcon className="w-5 h-5 text-green-600" />
+                <div>
+                  <p className="font-medium">{selectedCRM}</p>
+                  <p className="text-sm text-muted-foreground">
+                    Last synced: {new Date().toLocaleDateString()}
+                  </p>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleDisconnect(conn.id)}
-                >
-                  Disconnect
-                </Button>
               </div>
-            ))}
+              <Button
+                variant="outline"
+                className="text-destructive"
+                onClick={handleDisconnect}
+              >
+                Disconnect
+              </Button>
+            </div>
           </div>
-        )}
-
-        {/* New Connection Form */}
-        <div className="space-y-4">
-          <h4 className="text-sm font-medium">Add New Connection</h4>
-
-          {/* Platform Selection */}
-          <div className="space-y-2">
-            <Label>CRM Platform</Label>
-            <Select value={platform} onValueChange={setPlatform}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select CRM platform" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="hubspot">HubSpot</SelectItem>
-                <SelectItem value="zoho">Zoho CRM</SelectItem>
-                <SelectItem value="salesforce">Salesforce</SelectItem>
-                <SelectItem value="pipedrive">Pipedrive</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* API Key Input */}
-          <div className="space-y-2">
-            <Label>API Key</Label>
-            <Input
-              type="password"
-              placeholder="Enter your API key"
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-            />
-            <p className="text-xs text-muted-foreground">
-              Find your API key in your CRM platform's developer settings
-            </p>
-          </div>
-
-          {/* Domain Input (Optional) */}
-          {platform === "hubspot" && (
+        ) : (
+          <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Domain</Label>
+              <Label>CRM Provider</Label>
+              <Select value={selectedCRM} onValueChange={setSelectedCRM}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select CRM provider" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="hubspot">HubSpot</SelectItem>
+                  <SelectItem value="zoho">Zoho</SelectItem>
+                  <SelectItem value="salesforce">Salesforce</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>API Key</Label>
               <Input
-                type="text"
-                placeholder="your-domain.hubspot.com"
-                value={domain}
-                onChange={(e) => setDomain(e.target.value)}
+                type="password"
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                placeholder="Enter your CRM API key"
               />
             </div>
-          )}
 
-          {/* Action Buttons */}
-          <div className="flex items-center gap-3">
             <Button
+              className="w-full"
               onClick={handleConnect}
-              disabled={!platform || !apiKey || connecting}
-              className="flex-1"
+              disabled={!selectedCRM || !apiKey}
             >
-              {connecting ? (
-                <>
-                  <RefreshCwIcon className="w-4 h-4 mr-2 animate-spin" />
-                  Connecting...
-                </>
-              ) : (
-                <>
-                  <PlusIcon className="w-4 h-4 mr-2" />
-                  Connect Platform
-                </>
-              )}
+              Connect CRM
             </Button>
           </div>
-        </div>
-
-        {/* Help Text */}
-        <p className="text-xs text-muted-foreground text-center">
-          Need help? Check our{" "}
-          <a
-            href="#"
-            className="text-primary hover:underline"
-            onClick={(e) => e.preventDefault()}
-          >
-            integration guide
-          </a>{" "}
-          for detailed instructions
-        </p>
+        )}
       </div>
     </Card>
   );

@@ -1,5 +1,5 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -8,6 +8,9 @@ import {
   SettingsIcon,
   HomeIcon,
   LogOutIcon,
+  ZapIcon,
+  BoltIcon,
+  InboxIcon,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -20,7 +23,6 @@ import {
 
 interface SidebarProps {
   className?: string;
-  activePath?: string;
   onSignOut?: () => void;
 }
 
@@ -47,17 +49,26 @@ const navItems: NavItem[] = [
     icon: <BarChart3Icon className="w-5 h-5" />,
   },
   {
+    label: "Automations",
+    path: "/automations",
+    icon: <BoltIcon className="w-5 h-5" />,
+  },
+  {
+    label: "Feedback",
+    path: "/feedback",
+    icon: <InboxIcon className="w-5 h-5" />,
+  },
+  {
     label: "Settings",
     path: "/settings",
     icon: <SettingsIcon className="w-5 h-5" />,
   },
 ];
 
-const Sidebar = ({
-  className = "",
-  activePath = "/",
-  onSignOut = () => {},
-}: SidebarProps) => {
+const Sidebar = ({ className = "", onSignOut = () => {} }: SidebarProps) => {
+  const location = useLocation();
+  const activePath = location.pathname;
+
   return (
     <div
       className={cn(

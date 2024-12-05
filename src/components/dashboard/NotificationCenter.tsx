@@ -1,6 +1,5 @@
 import React from "react";
 import { cn } from "@/lib/utils";
-import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { BellIcon, XIcon } from "lucide-react";
@@ -10,106 +9,93 @@ interface NotificationCenterProps {
   className?: string;
   isOpen?: boolean;
   onToggle?: () => void;
-  notifications?: Array<{
-    id: string;
-    type: "review" | "response" | "system";
-    priority: "high" | "medium" | "low";
-    title: string;
-    message: string;
-    time: string;
-    isRead?: boolean;
-    actionUrl?: string;
-  }>;
-  onClearAll?: () => void;
-  onRead?: (id: string) => void;
-  onAction?: (id: string) => void;
 }
+
+const mockNotifications = [
+  {
+    id: "1",
+    type: "review",
+    priority: "high",
+    title: "New 2-Star Review",
+    message:
+      "A customer left a 2-star review mentioning slow service and quality concerns.",
+    time: new Date().toISOString(),
+    isRead: false,
+    actionUrl: "/reviews/123",
+  },
+  {
+    id: "2",
+    type: "review",
+    priority: "medium",
+    title: "New 3-Star Review",
+    message:
+      "Customer feedback about wait times and pricing - requires attention.",
+    time: new Date(Date.now() - 30 * 60000).toISOString(),
+    isRead: false,
+    actionUrl: "/reviews/124",
+  },
+  {
+    id: "3",
+    type: "system",
+    priority: "low",
+    title: "Weekly Review Summary",
+    message:
+      "Your weekly review performance report is now available. Overall rating: 4.5",
+    time: new Date(Date.now() - 2 * 3600000).toISOString(),
+    isRead: true,
+    actionUrl: "/analytics",
+  },
+  {
+    id: "4",
+    type: "review",
+    priority: "high",
+    title: "Urgent: 1-Star Review",
+    message:
+      "Critical feedback received regarding staff behavior and cleanliness.",
+    time: new Date(Date.now() - 4 * 3600000).toISOString(),
+    isRead: false,
+    actionUrl: "/reviews/125",
+  },
+  {
+    id: "5",
+    type: "response",
+    priority: "medium",
+    title: "Response Needed",
+    message:
+      "3 reviews from last week still need responses. Maintain response rate above 90%.",
+    time: new Date(Date.now() - 12 * 3600000).toISOString(),
+    isRead: true,
+    actionUrl: "/reviews/pending",
+  },
+  {
+    id: "6",
+    type: "system",
+    priority: "low",
+    title: "AI Response Training Complete",
+    message:
+      "Your AI response model has been updated with your latest approved responses.",
+    time: new Date(Date.now() - 24 * 3600000).toISOString(),
+    isRead: true,
+  },
+];
 
 const NotificationCenter = ({
   className = "",
   isOpen = true,
   onToggle = () => {},
-  notifications = [
-    {
-      id: "1",
-      type: "review",
-      priority: "high",
-      title: "New Low Rating Review",
-      message:
-        "A customer left a 2-star review that requires immediate attention.",
-      time: new Date().toISOString(),
-      isRead: false,
-      actionUrl: "/reviews/123",
-    },
-    {
-      id: "2",
-      type: "system",
-      priority: "medium",
-      title: "Weekly Review Summary",
-      message: "Your weekly review performance report is now available.",
-      time: new Date(Date.now() - 86400000).toISOString(),
-      isRead: true,
-      actionUrl: "/analytics",
-    },
-    {
-      id: "3",
-      type: "review",
-      priority: "high",
-      title: "Response Needed",
-      message: "3 reviews from the past 24 hours still need responses.",
-      time: new Date(Date.now() - 3600000).toISOString(),
-      isRead: false,
-      actionUrl: "/reviews",
-    },
-    {
-      id: "4",
-      type: "system",
-      priority: "low",
-      title: "Review Milestone Reached",
-      message: "Congratulations! You've received your 1,000th review.",
-      time: new Date(Date.now() - 7200000).toISOString(),
-      isRead: false,
-      actionUrl: "/analytics",
-    },
-    {
-      id: "5",
-      type: "response",
-      priority: "medium",
-      title: "Response Approved",
-      message:
-        "Your response to John D.'s review has been approved and published.",
-      time: new Date(Date.now() - 14400000).toISOString(),
-      isRead: true,
-      actionUrl: "/reviews/456",
-    },
-    {
-      id: "6",
-      type: "system",
-      priority: "medium",
-      title: "Rating Improvement",
-      message:
-        "Your average rating has improved from 4.2 to 4.5 stars this month!",
-      time: new Date(Date.now() - 28800000).toISOString(),
-      isRead: false,
-      actionUrl: "/analytics",
-    },
-    {
-      id: "7",
-      type: "review",
-      priority: "high",
-      title: "Trending Keywords Detected",
-      message:
-        "Multiple recent reviews mention 'wait times'. Consider addressing this issue.",
-      time: new Date(Date.now() - 43200000).toISOString(),
-      isRead: false,
-      actionUrl: "/analytics/trends",
-    },
-  ],
-  onClearAll = () => {},
-  onRead = () => {},
-  onAction = () => {},
 }: NotificationCenterProps) => {
+  const [notifications, setNotifications] = React.useState(mockNotifications);
+
   const unreadCount = notifications.filter((n) => !n.isRead).length;
+
+  const handleDismiss = (id: string) => {
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+  };
+
+  const handleAction = (id: string) => {
+    // Handle clicking on a notification
+    console.log("Clicked notification:", id);
+  };
 
   return (
     <div className={cn("flex flex-col h-full bg-background", className)}>
@@ -124,19 +110,9 @@ const NotificationCenter = ({
             </span>
           )}
         </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-muted-foreground hover:text-foreground"
-            onClick={onClearAll}
-          >
-            Clear All
-          </Button>
-          <Button variant="ghost" size="icon" onClick={onToggle}>
-            <XIcon className="h-4 w-4" />
-          </Button>
-        </div>
+        <Button variant="ghost" size="icon" onClick={onToggle}>
+          <XIcon className="h-4 w-4" />
+        </Button>
       </div>
 
       {/* Notifications List */}
@@ -147,8 +123,8 @@ const NotificationCenter = ({
               <AlertItem
                 key={notification.id}
                 alert={notification}
-                onRead={onRead}
-                onAction={onAction}
+                onAction={handleAction}
+                onDismiss={handleDismiss}
               />
             ))
           ) : (

@@ -62,12 +62,11 @@ const AlertItem = ({
   return (
     <Card
       className={cn(
-        "w-full p-4 bg-background transition-colors",
+        "w-full p-4 bg-background",
         !alert.isRead && "bg-primary/5",
       )}
     >
       <div className="flex items-start gap-4">
-        {/* Icon */}
         <div
           className={cn(
             "p-2 rounded-full",
@@ -77,7 +76,6 @@ const AlertItem = ({
           {getTypeIcon(alert.type)}
         </div>
 
-        {/* Content */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2">
             <h4 className="text-sm font-medium truncate">{alert.title}</h4>
