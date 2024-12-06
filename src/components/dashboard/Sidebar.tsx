@@ -9,7 +9,6 @@ import {
   HomeIcon,
   LogOutIcon,
   ZapIcon,
-  BoltIcon,
   InboxIcon,
 } from "lucide-react";
 import {
@@ -49,9 +48,9 @@ const navItems: NavItem[] = [
     icon: <BarChart3Icon className="w-5 h-5" />,
   },
   {
-    label: "Automations",
-    path: "/automations",
-    icon: <BoltIcon className="w-5 h-5" />,
+    label: "Templates",
+    path: "/templates",
+    icon: <ZapIcon className="w-5 h-5" />,
   },
   {
     label: "Feedback",
@@ -126,10 +125,6 @@ const Sidebar = ({ className = "", onSignOut = () => {} }: SidebarProps) => {
           <DropdownMenuContent align="start" className="w-[240px]">
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <SettingsIcon className="w-4 h-4 mr-2" />
-              Account Settings
-            </DropdownMenuItem>
             <DropdownMenuItem className="text-red-600" onClick={onSignOut}>
               <LogOutIcon className="w-4 h-4 mr-2" />
               Sign Out

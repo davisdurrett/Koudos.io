@@ -4,8 +4,8 @@ import DashboardLayout from "./pages/dashboard";
 import DashboardHome from "./pages/dashboard/home";
 import Reviews from "./pages/dashboard/reviews";
 import Analytics from "./pages/dashboard/analytics";
-import AutomationsPage from "./pages/dashboard/automations";
-import FeedbackList from "./pages/dashboard/feedback";
+import FeedbackPage from "./pages/dashboard/feedback";
+import TemplatesPage from "./pages/dashboard/templates";
 import Settings from "./pages/dashboard/settings";
 import SignIn from "./pages/signin";
 import SignUp from "./pages/signup";
@@ -40,8 +40,8 @@ function App() {
               <Route index element={<DashboardHome />} />
               <Route path="reviews" element={<Reviews />} />
               <Route path="analytics" element={<Analytics />} />
-              <Route path="automations" element={<AutomationsPage />} />
-              <Route path="feedback" element={<FeedbackList />} />
+              <Route path="templates" element={<TemplatesPage />} />
+              <Route path="feedback" element={<FeedbackPage />} />
               <Route path="settings" element={<Settings />} />
             </Route>
 
