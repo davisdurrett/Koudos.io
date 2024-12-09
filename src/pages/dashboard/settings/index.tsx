@@ -34,6 +34,56 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import CRMConnector from "@/components/dashboard/CRMConnector";
+
+const faqs = [
+  {
+    question: "How do I get started with review management?",
+    answer:
+      "To get started, first connect your Google Business Profile and/or Yelp account in the Integrations tab. Once connected, your reviews will automatically sync and appear in your dashboard. You can then start responding to reviews and setting up automated responses.",
+  },
+  {
+    question: "How do automated review responses work?",
+    answer:
+      "Our AI-powered system generates personalized responses based on the review content and sentiment. You can customize response templates in the Automations section and set rules for different types of reviews. The system will then automatically generate appropriate responses while maintaining a personal touch.",
+  },
+  {
+    question: "What happens when I receive a negative review?",
+    answer:
+      "When a review of 3 stars or lower is received, you'll get an immediate notification. The review is automatically flagged for attention in your dashboard. You can respond directly from the platform, and we provide AI-suggested responses to help address concerns professionally and turn the situation around.",
+  },
+  {
+    question: "Can I manage multiple business locations?",
+    answer:
+      "Yes, you can manage multiple business locations from a single dashboard. Each location can have its own settings, automated responses, and team members. You can easily switch between locations and view aggregated analytics across all your businesses.",
+  },
+  {
+    question: "How do I export my review data?",
+    answer:
+      "You can export your review data in various formats (CSV, PDF) from the Analytics section. This includes review content, ratings, response rates, and other metrics over any time period. These reports can be automated and scheduled to be sent to specific team members.",
+  },
+  {
+    question: "What CRM systems do you integrate with?",
+    answer:
+      "We currently integrate with major CRM platforms including HubSpot, Salesforce, and Zoho. These integrations allow you to sync customer data, track review history in your CRM, and create automated workflows between systems. You can set up these integrations in the Integrations tab.",
+  },
+  {
+    question: "How do I add team members?",
+    answer:
+      "In the Organization tab under Settings, you'll find a 'Team Members' section. Click 'Add Team Member', enter their email, and assign appropriate permissions. They'll receive an invitation to join your account. You can manage roles and permissions for each team member from the same section.",
+  },
+  {
+    question: "How secure is my data?",
+    answer:
+      "We take security seriously. All data is encrypted both in transit and at rest. We use industry-standard security protocols, regular security audits, and provide options for two-factor authentication. You can review and configure security settings in the Security tab.",
+  },
+];
 
 const Settings = () => {
   const { toast } = useToast();
@@ -339,6 +389,25 @@ const Settings = () => {
                   </Button>
                 </div>
               </div>
+
+              {/* CRM Integration */}
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-purple-100 rounded-lg">
+                      <DatabaseIcon className="w-6 h-6 text-purple-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold">CRM Integration</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Connect your CRM to sync customer data
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <Separator />
+                <CRMConnector />
+              </div>
             </div>
           </Card>
         </TabsContent>
@@ -400,19 +469,31 @@ const Settings = () => {
                 {/* FAQs */}
                 <div className="space-y-4">
                   <h4 className="text-sm font-medium">
-                    Frequently Asked Questions
+                    Common Questions & Answers
                   </h4>
-                  <Card className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-1">
-                        <p className="font-medium">Knowledge Base</p>
-                        <p className="text-sm text-muted-foreground">
-                          Browse our FAQ and troubleshooting guides
-                        </p>
-                      </div>
-                      <Button variant="outline">
+                  <Card>
+                    <Accordion type="single" collapsible className="w-full">
+                      {faqs.map((faq, index) => (
+                        <AccordionItem key={index} value={`faq-${index}`}>
+                          <AccordionTrigger className="px-4 hover:no-underline hover:bg-muted/50">
+                            <div className="flex items-center gap-2 text-left">
+                              <span className="font-medium">
+                                {faq.question}
+                              </span>
+                            </div>
+                          </AccordionTrigger>
+                          <AccordionContent className="px-4 pb-4">
+                            <p className="text-sm text-muted-foreground">
+                              {faq.answer}
+                            </p>
+                          </AccordionContent>
+                        </AccordionItem>
+                      ))}
+                    </Accordion>
+                    <div className="p-4 border-t bg-muted/10">
+                      <Button variant="outline" className="w-full">
                         <ExternalLinkIcon className="w-4 h-4 mr-2" />
-                        View FAQs
+                        View Full Knowledge Base
                       </Button>
                     </div>
                   </Card>

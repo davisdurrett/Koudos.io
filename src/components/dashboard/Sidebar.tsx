@@ -4,8 +4,9 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  MessageSquareIcon,
+  StarIcon,
   SettingsIcon,
+  MessageSquareTextIcon,
   HomeIcon,
   LogOutIcon,
   ZapIcon,
@@ -38,13 +39,11 @@ const Sidebar = ({ className = "", onSignOut = () => {} }: SidebarProps) => {
   const activePath = location.pathname;
 
   // Load and manage notification counts
-  const [reviewNotifications, setReviewNotifications] = React.useState(() => {
-    return parseInt(localStorage.getItem("unreadReviews") || "3");
-  });
+  const [reviewNotifications, setReviewNotifications] = React.useState(
+    parseInt(localStorage.getItem("unreadReviews") || "0"),
+  );
   const [feedbackNotifications, setFeedbackNotifications] = React.useState(
-    () => {
-      return parseInt(localStorage.getItem("unreadFeedback") || "2");
-    },
+    parseInt(localStorage.getItem("unreadFeedback") || "0"),
   );
 
   // Clear notifications when visiting respective pages
@@ -58,6 +57,40 @@ const Sidebar = ({ className = "", onSignOut = () => {} }: SidebarProps) => {
     }
   }, [activePath]);
 
+  // Simulate receiving new notifications
+  React.useEffect(() => {
+    // Check for new reviews every 30 seconds
+    const reviewInterval = setInterval(() => {
+      if (Math.random() > 0.7) {
+        // 30% chance of new review
+        const currentReviews = parseInt(
+          localStorage.getItem("unreadReviews") || "0",
+        );
+        const newReviews = currentReviews + 1;
+        localStorage.setItem("unreadReviews", newReviews.toString());
+        setReviewNotifications(newReviews);
+      }
+    }, 30000);
+
+    // Check for new feedback every 45 seconds
+    const feedbackInterval = setInterval(() => {
+      if (Math.random() > 0.8) {
+        // 20% chance of new feedback
+        const currentFeedback = parseInt(
+          localStorage.getItem("unreadFeedback") || "0",
+        );
+        const newFeedback = currentFeedback + 1;
+        localStorage.setItem("unreadFeedback", newFeedback.toString());
+        setFeedbackNotifications(newFeedback);
+      }
+    }, 45000);
+
+    return () => {
+      clearInterval(reviewInterval);
+      clearInterval(feedbackInterval);
+    };
+  }, []);
+
   const navItems: NavItem[] = [
     {
       label: "Dashboard",
@@ -67,7 +100,7 @@ const Sidebar = ({ className = "", onSignOut = () => {} }: SidebarProps) => {
     {
       label: "Reviews",
       path: "/reviews",
-      icon: <MessageSquareIcon className="w-5 h-5" />,
+      icon: <StarIcon className="w-5 h-5" />,
       notifications: reviewNotifications,
     },
     {
@@ -78,7 +111,7 @@ const Sidebar = ({ className = "", onSignOut = () => {} }: SidebarProps) => {
     {
       label: "Feedback",
       path: "/feedback",
-      icon: <InboxIcon className="w-5 h-5" />,
+      icon: <MessageSquareTextIcon className="w-5 h-5" />,
       notifications: feedbackNotifications,
     },
     {

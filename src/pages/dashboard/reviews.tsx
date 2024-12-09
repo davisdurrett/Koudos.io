@@ -65,46 +65,111 @@ const Reviews = () => {
     {
       id: "1",
       author: {
-        name: "Sarah Johnson",
-        email: "sarah@example.com",
-        phone: "(555) 123-4567",
+        name: "Jennifer Lee",
+        email: "jennifer@example.com",
+        phone: "(555) 777-8888",
       },
-      rating: 5,
+      rating: 1,
       date: "2024-03-15",
-      text: "Absolutely fantastic experience! The staff was incredibly friendly and professional. Everything was perfect from start to finish. The attention to detail really impressed me.",
-      sentiment: "positive",
+      text: "Extremely disappointed with my visit today. The wait time was unacceptable - over an hour past my appointment time. Staff was unapologetic and seemed disorganized. Not the level of service I expect for these prices.",
+      sentiment: "negative",
       status: "pending",
       source: "google",
     },
     {
       id: "2",
       author: {
-        name: "Mike Roberts",
-        email: "mike@example.com",
-        phone: "(555) 234-5678",
+        name: "David Wilson",
+        email: "david@example.com",
+        phone: "(555) 666-7777",
       },
-      rating: 2,
-      text: "Very disappointed with the service. Long wait times and the staff seemed disorganized. Not what I expected based on the reviews.",
-      date: "2024-03-14",
+      rating: 5,
+      date: "2024-03-15",
+      text: "Outstanding service! The staff went above and beyond to make sure I had a great experience. The attention to detail and professionalism was impressive. Will definitely be returning and recommending to others!",
+      sentiment: "positive",
       status: "pending",
       source: "yelp",
     },
     {
       id: "3",
       author: {
-        name: "John Smith",
-        email: "john@example.com",
-        phone: "(555) 345-6789",
+        name: "Michael Chen",
+        email: "michael@example.com",
+        phone: "(555) 555-9999",
+      },
+      rating: 2,
+      date: "2024-03-14",
+      text: "Service quality has declined significantly. Long wait times, poor communication, and the facility wasn't as clean as it should be. Really disappointed as I've been a regular customer.",
+      sentiment: "negative",
+      status: "pending",
+      source: "google",
+    },
+    {
+      id: "4",
+      author: {
+        name: "Rachel Thompson",
+        email: "rachel@example.com",
+        phone: "(555) 444-3333",
       },
       rating: 4,
-      text: "Great service overall, but the wait time was a bit longer than expected. Staff was friendly and helpful though.",
-      date: "2024-03-13",
-      status: "responded",
+      date: "2024-03-14",
+      text: "Very good experience overall. The staff was friendly and professional. Only minor suggestion would be to improve the waiting area comfort. Otherwise, great service!",
+      sentiment: "positive",
+      status: "pending",
       source: "google",
+    },
+    {
+      id: "5",
+      author: {
+        name: "Emma Rodriguez",
+        email: "emma@example.com",
+        phone: "(555) 222-1111",
+      },
+      rating: 5,
+      date: "2024-03-13",
+      text: "Absolutely fantastic! From the moment I walked in, I felt welcomed and valued. The staff is incredibly skilled and professional. The results exceeded my expectations. Highly recommend!",
+      sentiment: "positive",
+      status: "responded",
+      source: "yelp",
       response:
-        "Thank you for your feedback! We appreciate your patience and are actively working on improving our wait times. We're glad you enjoyed the service otherwise!",
+        "Thank you so much for your wonderful feedback, Emma! We're thrilled to hear about your great experience. Our team takes pride in providing exceptional service, and we look forward to seeing you again!",
     },
   ];
+
+  const sortedAndFilteredReviews = React.useMemo(() => {
+    let sorted = [...mockReviews];
+
+    // Apply sorting
+    switch (sortBy) {
+      case "newest":
+        sorted = sorted.sort(
+          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+        );
+        break;
+      case "oldest":
+        sorted = sorted.sort(
+          (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+        );
+        break;
+      case "rating-high":
+        sorted = sorted.sort((a, b) => b.rating - a.rating);
+        break;
+      case "rating-low":
+        sorted = sorted.sort((a, b) => a.rating - b.rating);
+        break;
+    }
+
+    // Apply search filter
+    if (search) {
+      sorted = sorted.filter(
+        (review) =>
+          review.author.name.toLowerCase().includes(search.toLowerCase()) ||
+          review.text.toLowerCase().includes(search.toLowerCase()),
+      );
+    }
+
+    return sorted;
+  }, [mockReviews, sortBy, search]);
 
   const getAIResponses = (review: Review) => {
     const firstName = review.author.name.split(" ")[0];
@@ -179,7 +244,7 @@ const Reviews = () => {
       </div>
 
       <div className="space-y-4">
-        {mockReviews.map((review) => (
+        {sortedAndFilteredReviews.map((review) => (
           <Card key={review.id} className="p-4">
             <div className="space-y-4">
               <div className="flex items-center justify-between">
@@ -294,57 +359,63 @@ const Reviews = () => {
                       </a>
                     </div>
                   )}
-                  <div className="flex items-center gap-1">
-                    <CalendarIcon className="w-3 h-3" />
-                    {selectedReview?.date &&
-                      new Date(selectedReview.date).toLocaleDateString()}
-                  </div>
                 </div>
-              </div>
-              <div className="flex items-center gap-1">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <StarIcon
-                    key={i}
-                    className={`w-4 h-4 ${i < (selectedReview?.rating || 0) ? "text-yellow-400 fill-current" : "text-gray-300"}`}
-                  />
-                ))}
               </div>
             </div>
 
-            {/* Review Text */}
-            <div className="p-4 border rounded-lg">
+            {/* Review Content */}
+            <div className="p-4 bg-muted rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: selectedReview?.rating || 0 }).map(
+                    (_, i) => (
+                      <StarIcon
+                        key={i}
+                        className="w-4 h-4 text-yellow-400 fill-current"
+                      />
+                    ),
+                  )}
+                </div>
+                <span className="text-sm text-muted-foreground">
+                  {new Date(selectedReview?.date || "").toLocaleDateString()}
+                </span>
+              </div>
               <p className="text-sm">{selectedReview?.text}</p>
             </div>
 
-            <div className="space-y-2">
-              <Label>AI Response Suggestions</Label>
+            {/* AI Response Suggestions */}
+            <div className="space-y-4">
+              <Label>AI-Suggested Responses</Label>
               <div className="grid grid-cols-3 gap-4">
-                {Object.entries(aiResponses).map(([type, text]) => (
-                  <div
-                    key={type}
-                    className="border rounded-lg p-4 hover:border-primary cursor-pointer transition-colors"
+                {Object.entries(aiResponses).map(([tone, text]) => (
+                  <Card
+                    key={tone}
+                    className="p-4 cursor-pointer hover:border-primary transition-colors"
                     onClick={() => setResponse(text)}
                   >
                     <div className="space-y-2">
-                      <span className="font-medium capitalize block">
-                        {type}
-                      </span>
-                      <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                        {text}
-                      </p>
+                      <Badge variant="secondary" className="capitalize">
+                        {tone}
+                      </Badge>
+                      <p className="text-sm text-muted-foreground">{text}</p>
                     </div>
-                  </div>
+                  </Card>
                 ))}
               </div>
             </div>
 
-            <Textarea
-              placeholder="Type your response..."
-              value={response}
-              onChange={(e) => setResponse(e.target.value)}
-              className="min-h-[100px]"
-            />
+            {/* Response Input */}
+            <div className="space-y-2">
+              <Label>Your Response</Label>
+              <Textarea
+                value={response}
+                onChange={(e) => setResponse(e.target.value)}
+                placeholder="Write your response..."
+                className="min-h-[100px]"
+              />
+            </div>
           </div>
+
           <DialogFooter>
             <Button
               variant="outline"

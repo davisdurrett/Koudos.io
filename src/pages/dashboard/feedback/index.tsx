@@ -44,7 +44,42 @@ interface FeedbackItem {
 const FeedbackPage = () => {
   const [search, setSearch] = React.useState("");
   const [sortBy, setSortBy] = React.useState("newest");
+  const [selectedFeedback, setSelectedFeedback] =
+    React.useState<FeedbackItem | null>(null);
+  const [resolutionNote, setResolutionNote] = React.useState("");
+  const [isResolutionDialogOpen, setIsResolutionDialogOpen] =
+    React.useState(false);
   const [feedback, setFeedback] = React.useState<FeedbackItem[]>([
+    {
+      businessId: "1",
+      customerName: "Michael Chen",
+      customerPhone: "(555) 987-6543",
+      rating: 2,
+      comment:
+        "The prices have gone up significantly while the service quality has declined. Had to wait over an hour past my appointment time.",
+      createdAt: new Date().toISOString(),
+      isNew: true,
+    },
+    {
+      businessId: "1",
+      customerName: "Rachel Thompson",
+      customerPhone: "(555) 234-5678",
+      rating: 1,
+      comment:
+        "Very disappointed with my recent visit. The staff was unprofessional and the facility wasn't clean. Not what I expected based on previous experiences.",
+      createdAt: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
+      isNew: true,
+    },
+    {
+      businessId: "1",
+      customerName: "David Wilson",
+      customerPhone: "(555) 345-6789",
+      rating: 2,
+      comment:
+        "Service has really gone downhill. Long wait times and poor communication. Will be looking for alternatives.",
+      createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+      isNew: true,
+    },
     {
       businessId: "1",
       customerName: "Sarah Johnson",
@@ -52,17 +87,31 @@ const FeedbackPage = () => {
       rating: 2,
       comment:
         "The wait time was too long and the staff seemed disorganized. I had to wait over 45 minutes past my appointment time.",
-      createdAt: new Date().toISOString(),
+      createdAt: new Date(Date.now() - 36 * 60 * 60 * 1000).toISOString(),
       isNew: true,
     },
     {
       businessId: "1",
-      customerName: "Mike Brown",
-      customerPhone: "(555) 234-5678",
-      rating: 1,
+      customerName: "Jennifer Martinez",
+      customerPhone: "(555) 777-8888",
+      rating: 3,
       comment:
-        "Very disappointed with the service quality. The staff was rude and unprofessional.",
-      createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+        "Average experience. Some things were good but there's definitely room for improvement in terms of wait times and staff attentiveness.",
+      createdAt: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString(),
+      resolvedBy: "Alex Smith",
+      resolvedAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+      resolutionNote:
+        "Called customer to discuss concerns. Offered complimentary service on next visit and assured improvements in wait time management.",
+      isNew: false,
+    },
+    {
+      businessId: "1",
+      customerName: "Robert Brown",
+      customerPhone: "(555) 999-0000",
+      rating: 2,
+      comment:
+        "Pricing is too high for the quality of service provided. Staff seemed rushed and unorganized.",
+      createdAt: new Date(Date.now() - 60 * 60 * 60 * 1000).toISOString(),
       isNew: true,
     },
     {
@@ -72,19 +121,51 @@ const FeedbackPage = () => {
       rating: 3,
       comment:
         "Service was okay but there's definitely room for improvement. The facility could be cleaner.",
-      createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+      createdAt: new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString(),
       resolvedBy: "John Smith",
-      resolvedAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+      resolvedAt: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString(),
       resolutionNote:
         "Called customer and offered a complimentary service on their next visit. Will address cleanliness concerns with staff.",
       isNew: false,
     },
   ]);
-  const [selectedFeedback, setSelectedFeedback] =
-    React.useState<FeedbackItem | null>(null);
-  const [resolutionNote, setResolutionNote] = React.useState("");
-  const [isResolutionDialogOpen, setIsResolutionDialogOpen] =
-    React.useState(false);
+
+  const sortedAndFilteredFeedback = React.useMemo(() => {
+    let sorted = [...feedback];
+
+    // Apply sorting
+    switch (sortBy) {
+      case "newest":
+        sorted = sorted.sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+        );
+        break;
+      case "oldest":
+        sorted = sorted.sort(
+          (a, b) =>
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+        );
+        break;
+      case "highest":
+        sorted = sorted.sort((a, b) => b.rating - a.rating);
+        break;
+      case "lowest":
+        sorted = sorted.sort((a, b) => a.rating - b.rating);
+        break;
+    }
+
+    // Apply search filter
+    if (search) {
+      sorted = sorted.filter(
+        (item) =>
+          item.customerName.toLowerCase().includes(search.toLowerCase()) ||
+          item.comment.toLowerCase().includes(search.toLowerCase()),
+      );
+    }
+
+    return sorted;
+  }, [feedback, sortBy, search]);
 
   const handleResolve = (item: FeedbackItem) => {
     setSelectedFeedback(item);
@@ -112,34 +193,6 @@ const FeedbackPage = () => {
     setResolutionNote("");
     setSelectedFeedback(null);
   };
-
-  const sortedFeedback = React.useMemo(() => {
-    let sorted = [...feedback];
-    switch (sortBy) {
-      case "newest":
-        return sorted.sort(
-          (a, b) =>
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-        );
-      case "oldest":
-        return sorted.sort(
-          (a, b) =>
-            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-        );
-      case "highest":
-        return sorted.sort((a, b) => b.rating - a.rating);
-      case "lowest":
-        return sorted.sort((a, b) => a.rating - b.rating);
-      default:
-        return sorted;
-    }
-  }, [feedback, sortBy]);
-
-  const filteredFeedback = sortedFeedback.filter(
-    (item) =>
-      item.customerName?.toLowerCase().includes(search.toLowerCase()) ||
-      item.comment.toLowerCase().includes(search.toLowerCase()),
-  );
 
   return (
     <div className="p-6 space-y-6">
@@ -176,12 +229,12 @@ const FeedbackPage = () => {
       </div>
 
       <div className="space-y-4">
-        {filteredFeedback.length === 0 ? (
+        {sortedAndFilteredFeedback.length === 0 ? (
           <Card className="p-8 text-center">
             <p className="text-muted-foreground">No feedback submissions yet</p>
           </Card>
         ) : (
-          filteredFeedback.map((item, index) => (
+          sortedAndFilteredFeedback.map((item, index) => (
             <Card key={index} className="p-6">
               <div className="space-y-4">
                 {/* Customer Info */}
