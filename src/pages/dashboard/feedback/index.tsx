@@ -13,6 +13,13 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   SearchIcon,
   UserIcon,
   PhoneIcon,
@@ -31,31 +38,53 @@ interface FeedbackItem {
   resolvedBy?: string;
   resolvedAt?: string;
   resolutionNote?: string;
+  isNew?: boolean;
 }
 
 const FeedbackPage = () => {
   const [search, setSearch] = React.useState("");
-  const [feedback, setFeedback] = React.useState<FeedbackItem[]>([]);
+  const [sortBy, setSortBy] = React.useState("newest");
+  const [feedback, setFeedback] = React.useState<FeedbackItem[]>([
+    {
+      businessId: "1",
+      customerName: "Sarah Johnson",
+      customerPhone: "(555) 123-4567",
+      rating: 2,
+      comment:
+        "The wait time was too long and the staff seemed disorganized. I had to wait over 45 minutes past my appointment time.",
+      createdAt: new Date().toISOString(),
+      isNew: true,
+    },
+    {
+      businessId: "1",
+      customerName: "Mike Brown",
+      customerPhone: "(555) 234-5678",
+      rating: 1,
+      comment:
+        "Very disappointed with the service quality. The staff was rude and unprofessional.",
+      createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+      isNew: true,
+    },
+    {
+      businessId: "1",
+      customerName: "Emily Davis",
+      customerPhone: "(555) 345-6789",
+      rating: 3,
+      comment:
+        "Service was okay but there's definitely room for improvement. The facility could be cleaner.",
+      createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+      resolvedBy: "John Smith",
+      resolvedAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+      resolutionNote:
+        "Called customer and offered a complimentary service on their next visit. Will address cleanliness concerns with staff.",
+      isNew: false,
+    },
+  ]);
   const [selectedFeedback, setSelectedFeedback] =
     React.useState<FeedbackItem | null>(null);
   const [resolutionNote, setResolutionNote] = React.useState("");
   const [isResolutionDialogOpen, setIsResolutionDialogOpen] =
     React.useState(false);
-
-  // Load feedback from localStorage
-  React.useEffect(() => {
-    const loadFeedback = () => {
-      const storedFeedback = localStorage.getItem("feedback");
-      if (storedFeedback) {
-        setFeedback(JSON.parse(storedFeedback));
-      }
-    };
-
-    loadFeedback();
-    // Set up an interval to check for new feedback
-    const interval = setInterval(loadFeedback, 5000);
-    return () => clearInterval(interval);
-  }, []);
 
   const handleResolve = (item: FeedbackItem) => {
     setSelectedFeedback(item);
@@ -69,38 +98,61 @@ const FeedbackPage = () => {
       if (item === selectedFeedback) {
         return {
           ...item,
-          resolvedBy: "Current User", // In a real app, this would be the logged-in user
+          resolvedBy: "Current User",
           resolvedAt: new Date().toISOString(),
           resolutionNote,
+          isNew: false,
         };
       }
       return item;
     });
 
     setFeedback(updatedFeedback);
-    localStorage.setItem("feedback", JSON.stringify(updatedFeedback));
     setIsResolutionDialogOpen(false);
     setResolutionNote("");
     setSelectedFeedback(null);
   };
 
-  const filteredFeedback = feedback.filter(
+  const sortedFeedback = React.useMemo(() => {
+    let sorted = [...feedback];
+    switch (sortBy) {
+      case "newest":
+        return sorted.sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+        );
+      case "oldest":
+        return sorted.sort(
+          (a, b) =>
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+        );
+      case "highest":
+        return sorted.sort((a, b) => b.rating - a.rating);
+      case "lowest":
+        return sorted.sort((a, b) => a.rating - b.rating);
+      default:
+        return sorted;
+    }
+  }, [feedback, sortBy]);
+
+  const filteredFeedback = sortedFeedback.filter(
     (item) =>
-      item.customerName.toLowerCase().includes(search.toLowerCase()) ||
+      item.customerName?.toLowerCase().includes(search.toLowerCase()) ||
       item.comment.toLowerCase().includes(search.toLowerCase()),
   );
 
   return (
     <div className="p-6 space-y-6">
+      <div>
+        <h2 className="text-2xl font-semibold tracking-tight">
+          Customer Feedback
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          Review and resolve customer feedback
+        </p>
+      </div>
+
       <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-semibold tracking-tight">
-            Customer Feedback
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            Review and resolve customer feedback
-          </p>
-        </div>
         <div className="relative w-[300px]">
           <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
@@ -110,6 +162,17 @@ const FeedbackPage = () => {
             className="pl-9"
           />
         </div>
+        <Select value={sortBy} onValueChange={setSortBy}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Sort by" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="newest">Newest First</SelectItem>
+            <SelectItem value="oldest">Oldest First</SelectItem>
+            <SelectItem value="highest">Highest Rating</SelectItem>
+            <SelectItem value="lowest">Lowest Rating</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="space-y-4">
@@ -128,6 +191,11 @@ const FeedbackPage = () => {
                       <div className="flex items-center gap-2">
                         <UserIcon className="w-4 h-4 text-muted-foreground" />
                         <span className="font-medium">{item.customerName}</span>
+                        {item.isNew && (
+                          <Badge className="bg-primary text-primary-foreground">
+                            New
+                          </Badge>
+                        )}
                       </div>
                       <div className="flex items-center gap-2">
                         <PhoneIcon className="w-4 h-4 text-muted-foreground" />

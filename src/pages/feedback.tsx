@@ -1,12 +1,15 @@
 import React from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StarIcon, GiftIcon } from "lucide-react";
 import FeedbackForm from "@/components/feedback/FeedbackForm";
+import { useToast } from "@/components/ui/use-toast";
 
 const FeedbackPage = () => {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const rating = parseInt(searchParams.get("rating") || "0");
   const businessId = searchParams.get("businessId") || "";
   const [showGoogleReview, setShowGoogleReview] = React.useState(false);
@@ -16,15 +19,47 @@ const FeedbackPage = () => {
     category: string;
     comment: string;
   }) => {
-    // Here you would typically send the feedback to your backend
-    console.log("Submitting feedback:", {
-      ...data,
-      businessId,
-    });
+    try {
+      // Create feedback object with high priority for 1-4 star ratings
+      const feedback = {
+        ...data,
+        businessId,
+        priority: "high",
+        status: "pending",
+        createdAt: new Date().toISOString(),
+      };
 
-    // For 5-star ratings, show the Google review request after submitting feedback
-    if (rating === 5) {
-      setShowGoogleReview(true);
+      // Store in localStorage for now (in a real app this would go to a database)
+      const existingFeedback = JSON.parse(
+        localStorage.getItem("feedback") || "[]",
+      );
+      localStorage.setItem(
+        "feedback",
+        JSON.stringify([...existingFeedback, feedback]),
+      );
+
+      toast({
+        title: "Thank you for your feedback",
+        description:
+          "We appreciate you taking the time to share your experience.",
+      });
+
+      // For 5-star ratings, show the Google review request
+      if (rating === 5) {
+        setShowGoogleReview(true);
+      } else {
+        // For lower ratings, close the window after a delay
+        setTimeout(() => {
+          window.close();
+        }, 2000);
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description:
+          "There was an error submitting your feedback. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 

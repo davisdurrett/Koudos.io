@@ -3,113 +3,97 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/components/ui/use-toast";
+import { useSettings } from "@/lib/contexts/settings-context";
 import {
   BuildingIcon,
   UserIcon,
-  MailIcon,
-  BellIcon,
-  KeyIcon,
-  CreditCardIcon,
   SaveIcon,
-  GlobeIcon,
   DatabaseIcon,
-  BellRingIcon,
   ShieldIcon,
-  CheckIcon,
   UsersIcon,
   PlusIcon,
-  TrashIcon,
-  LockIcon,
+  MessageSquareIcon,
+  StarIcon,
+  ImageIcon,
+  BellIcon,
+  XIcon,
+  BellRingIcon,
+  VolumeIcon,
+  MailIcon,
+  GlobeIcon,
+  CircleDotIcon,
+  RefreshCwIcon,
+  CheckCircleIcon,
 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const Settings = () => {
-  const [settings, setSettings] = React.useState({
-    business: {
-      name: "",
-      website: "",
-      email: "",
-      phone: "",
-      googleBusinessId: "",
-      timezone: "America/New_York",
-    },
-    team: [
-      {
-        id: "1",
-        name: "John Doe",
-        email: "john@example.com",
-        role: "admin",
-        status: "active",
-      },
-    ],
-    account: {
-      name: "John Doe",
-      email: "john@example.com",
-      password: "",
-    },
-    notifications: {
-      email: true,
-      push: true,
-      urgentAlerts: true,
-      weeklyReports: true,
-    },
-    integrations: {
-      googleBusiness: true,
-      yelp: false,
-      crm: false,
-    },
-    security: {
-      twoFactor: false,
-      sessionTimeout: "30",
-      ipWhitelist: "",
-    },
-    billing: {
-      plan: "monthly",
-      interval: "monthly",
-    },
-  });
+  const { toast } = useToast();
+  const {
+    settings,
+    updateBusinessSettings,
+    updateNotificationSettings,
+    saveSettings,
+  } = useSettings();
 
-  const [newTeamMember, setNewTeamMember] = React.useState({
-    email: "",
-    role: "user",
-  });
-
-  const handleSave = async () => {
-    // Save settings to backend
-    console.log("Saving settings:", settings);
+  const handleSaveConfig = () => {
+    saveSettings();
+    toast({
+      title: "Settings saved",
+      description: "Your settings have been updated successfully.",
+    });
   };
 
-  const handleAddTeamMember = () => {
-    if (newTeamMember.email) {
-      setSettings((prev) => ({
-        ...prev,
-        team: [
-          ...prev.team,
-          {
-            id: Math.random().toString(),
-            name: "",
-            email: newTeamMember.email,
-            role: newTeamMember.role,
-            status: "pending",
-          },
-        ],
-      }));
-      setNewTeamMember({ email: "", role: "user" });
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        updateBusinessSettings({
+          logo: reader.result as string,
+        });
+      };
+      reader.readAsDataURL(file);
     }
   };
 
-  const handleRemoveTeamMember = (id: string) => {
-    setSettings((prev) => ({
-      ...prev,
-      team: prev.team.filter((member) => member.id !== id),
-    }));
+  const addEmailField = () => {
+    updateNotificationSettings({
+      urgentNotifications: [...settings.notifications.urgentNotifications, ""],
+    });
+  };
+
+  const removeEmailField = (index: number) => {
+    updateNotificationSettings({
+      urgentNotifications: settings.notifications.urgentNotifications.filter(
+        (_, i) => i !== index,
+      ),
+    });
+  };
+
+  const updateEmail = (index: number, value: string) => {
+    updateNotificationSettings({
+      urgentNotifications: settings.notifications.urgentNotifications.map(
+        (email, i) => (i === index ? value : email),
+      ),
+    });
   };
 
   return (
-    <div className="h-full bg-background p-6 space-y-6">
+    <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-semibold tracking-tight">Settings</h2>
@@ -117,29 +101,33 @@ const Settings = () => {
             Manage your account and business settings
           </p>
         </div>
-        <Button onClick={handleSave}>
+        <Button onClick={handleSaveConfig}>
           <SaveIcon className="w-4 h-4 mr-2" />
           Save Changes
         </Button>
       </div>
 
-      <Tabs defaultValue="business" className="space-y-6">
+      <Tabs defaultValue="notifications" className="space-y-6">
         <TabsList>
           <TabsTrigger value="business">
             <BuildingIcon className="w-4 h-4 mr-2" />
             Business
           </TabsTrigger>
-          <TabsTrigger value="team">
-            <UsersIcon className="w-4 h-4 mr-2" />
-            Team
+          <TabsTrigger value="notifications">
+            <BellIcon className="w-4 h-4 mr-2" />
+            Notifications
+          </TabsTrigger>
+          <TabsTrigger value="feedback">
+            <MessageSquareIcon className="w-4 h-4 mr-2" />
+            Feedback Form
           </TabsTrigger>
           <TabsTrigger value="account">
             <UserIcon className="w-4 h-4 mr-2" />
             Account
           </TabsTrigger>
-          <TabsTrigger value="notifications">
-            <BellIcon className="w-4 h-4 mr-2" />
-            Notifications
+          <TabsTrigger value="team">
+            <UsersIcon className="w-4 h-4 mr-2" />
+            Team
           </TabsTrigger>
           <TabsTrigger value="integrations">
             <DatabaseIcon className="w-4 h-4 mr-2" />
@@ -149,635 +137,156 @@ const Settings = () => {
             <ShieldIcon className="w-4 h-4 mr-2" />
             Security
           </TabsTrigger>
-          <TabsTrigger value="billing">
-            <CreditCardIcon className="w-4 h-4 mr-2" />
-            Billing
-          </TabsTrigger>
         </TabsList>
 
-        {/* Business Settings */}
-        <TabsContent value="business">
-          <Card className="p-6">
-            <div className="space-y-6">
-              <div className="flex items-center gap-2">
-                <BuildingIcon className="w-5 h-5" />
-                <h3 className="text-lg font-medium">Business Profile</h3>
-              </div>
-
-              <Separator />
-
-              <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label>Business Name</Label>
-                  <Input
-                    value={settings.business.name}
-                    onChange={(e) =>
-                      setSettings((prev) => ({
-                        ...prev,
-                        business: { ...prev.business, name: e.target.value },
-                      }))
-                    }
-                    placeholder="Enter your business name"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Website</Label>
-                  <div className="flex gap-2">
-                    <div className="flex-shrink-0 w-[100px]">
-                      <select className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm">
-                        <option value="https">https://</option>
-                        <option value="http">http://</option>
-                      </select>
-                    </div>
-                    <Input
-                      value={settings.business.website}
-                      onChange={(e) =>
-                        setSettings((prev) => ({
-                          ...prev,
-                          business: {
-                            ...prev.business,
-                            website: e.target.value,
-                          },
-                        }))
-                      }
-                      placeholder="www.example.com"
-                      className="flex-1"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Business Email</Label>
-                  <Input
-                    type="email"
-                    value={settings.business.email}
-                    onChange={(e) =>
-                      setSettings((prev) => ({
-                        ...prev,
-                        business: { ...prev.business, email: e.target.value },
-                      }))
-                    }
-                    placeholder="contact@business.com"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Phone Number</Label>
-                  <Input
-                    type="tel"
-                    value={settings.business.phone}
-                    onChange={(e) =>
-                      setSettings((prev) => ({
-                        ...prev,
-                        business: { ...prev.business, phone: e.target.value },
-                      }))
-                    }
-                    placeholder="(555) 555-5555"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Google Business ID</Label>
-                  <Input
-                    value={settings.business.googleBusinessId}
-                    onChange={(e) =>
-                      setSettings((prev) => ({
-                        ...prev,
-                        business: {
-                          ...prev.business,
-                          googleBusinessId: e.target.value,
-                        },
-                      }))
-                    }
-                    placeholder="Enter your Google Business ID"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Timezone</Label>
-                  <select
-                    className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
-                    value={settings.business.timezone}
-                    onChange={(e) =>
-                      setSettings((prev) => ({
-                        ...prev,
-                        business: {
-                          ...prev.business,
-                          timezone: e.target.value,
-                        },
-                      }))
-                    }
-                  >
-                    <option value="America/New_York">Eastern Time</option>
-                    <option value="America/Chicago">Central Time</option>
-                    <option value="America/Denver">Mountain Time</option>
-                    <option value="America/Los_Angeles">Pacific Time</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-          </Card>
-        </TabsContent>
-
-        {/* Team Settings */}
-        <TabsContent value="team">
-          <Card className="p-6">
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <UsersIcon className="w-5 h-5" />
-                  <h3 className="text-lg font-medium">Team Members</h3>
-                </div>
-                <div className="flex items-end gap-4">
-                  <div className="space-y-2">
-                    <Input
-                      placeholder="Email address"
-                      value={newTeamMember.email}
-                      onChange={(e) =>
-                        setNewTeamMember((prev) => ({
-                          ...prev,
-                          email: e.target.value,
-                        }))
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <select
-                      className="h-10 px-3 rounded-md border border-input bg-background text-sm"
-                      value={newTeamMember.role}
-                      onChange={(e) =>
-                        setNewTeamMember((prev) => ({
-                          ...prev,
-                          role: e.target.value,
-                        }))
-                      }
-                    >
-                      <option value="user">User</option>
-                      <option value="manager">Manager</option>
-                      <option value="admin">Admin</option>
-                    </select>
-                  </div>
-                  <Button onClick={handleAddTeamMember}>
-                    <PlusIcon className="w-4 h-4 mr-2" />
-                    Add Member
-                  </Button>
-                </div>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-4">
-                {settings.team.map((member) => (
-                  <div
-                    key={member.id}
-                    className="flex items-center justify-between p-4 border rounded-lg"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                        <span className="text-sm font-medium">
-                          {member.name
-                            ? member.name
-                                .split(" ")
-                                .map((n) => n[0])
-                                .join("")
-                                .toUpperCase()
-                            : member.email[0].toUpperCase()}
-                        </span>
-                      </div>
-                      <div>
-                        <p className="font-medium">
-                          {member.name || member.email}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {member.email}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <select
-                        className="h-9 px-3 rounded-md border border-input bg-background text-sm"
-                        value={member.role}
-                        onChange={(e) => {
-                          setSettings((prev) => ({
-                            ...prev,
-                            team: prev.team.map((m) =>
-                              m.id === member.id
-                                ? { ...m, role: e.target.value }
-                                : m,
-                            ),
-                          }));
-                        }}
-                      >
-                        <option value="user">User</option>
-                        <option value="manager">Manager</option>
-                        <option value="admin">Admin</option>
-                      </select>
-                      <Badge
-                        variant={
-                          member.status === "active" ? "default" : "secondary"
-                        }
-                      >
-                        {member.status}
-                      </Badge>
-                      {member.id !== "1" && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleRemoveTeamMember(member.id)}
-                        >
-                          <TrashIcon className="w-4 h-4 text-red-500" />
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="pt-4 text-sm text-muted-foreground">
-                <p>Role Permissions:</p>
-                <ul className="list-disc list-inside mt-2 space-y-1">
-                  <li>Admin: Full access to all features and settings</li>
-                  <li>Manager: Can manage reviews and automations</li>
-                  <li>User: Can view and respond to reviews</li>
-                </ul>
-              </div>
-            </div>
-          </Card>
-        </TabsContent>
-
-        {/* Account Settings */}
-        <TabsContent value="account">
-          <Card className="p-6">
-            <div className="space-y-6">
-              <div className="flex items-center gap-2">
-                <UserIcon className="w-5 h-5" />
-                <h3 className="text-lg font-medium">Account Settings</h3>
-              </div>
-
-              <Separator />
-
-              <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label>Full Name</Label>
-                  <Input
-                    value={settings.account.name}
-                    onChange={(e) =>
-                      setSettings((prev) => ({
-                        ...prev,
-                        account: { ...prev.account, name: e.target.value },
-                      }))
-                    }
-                    placeholder="Enter your name"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Email Address</Label>
-                  <Input
-                    type="email"
-                    value={settings.account.email}
-                    onChange={(e) =>
-                      setSettings((prev) => ({
-                        ...prev,
-                        account: { ...prev.account, email: e.target.value },
-                      }))
-                    }
-                    placeholder="you@example.com"
-                  />
-                </div>
-              </div>
-
-              <div className="pt-4">
-                <Button variant="outline">
-                  <KeyIcon className="w-4 h-4 mr-2" />
-                  Change Password
-                </Button>
-              </div>
-            </div>
-          </Card>
-        </TabsContent>
-
-        {/* Notification Settings */}
+        {/* Notifications Tab */}
         <TabsContent value="notifications">
           <Card className="p-6">
             <div className="space-y-6">
-              <div className="flex items-center gap-2">
-                <BellRingIcon className="w-5 h-5" />
-                <h3 className="text-lg font-medium">
-                  Notification Preferences
-                </h3>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label>Email Notifications</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Receive notifications via email
-                    </p>
-                  </div>
-                  <Switch
-                    checked={settings.notifications.email}
-                    onCheckedChange={(checked) =>
-                      setSettings((prev) => ({
-                        ...prev,
-                        notifications: {
-                          ...prev.notifications,
-                          email: checked,
-                        },
-                      }))
-                    }
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label>Push Notifications</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Receive notifications in the browser
-                    </p>
-                  </div>
-                  <Switch
-                    checked={settings.notifications.push}
-                    onCheckedChange={(checked) =>
-                      setSettings((prev) => ({
-                        ...prev,
-                        notifications: { ...prev.notifications, push: checked },
-                      }))
-                    }
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label>Urgent Alerts</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Get notified immediately for urgent issues
-                    </p>
-                  </div>
-                  <Switch
-                    checked={settings.notifications.urgentAlerts}
-                    onCheckedChange={(checked) =>
-                      setSettings((prev) => ({
-                        ...prev,
-                        notifications: {
-                          ...prev.notifications,
-                          urgentAlerts: checked,
-                        },
-                      }))
-                    }
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label>Weekly Reports</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Receive weekly performance reports
-                    </p>
-                  </div>
-                  <Switch
-                    checked={settings.notifications.weeklyReports}
-                    onCheckedChange={(checked) =>
-                      setSettings((prev) => ({
-                        ...prev,
-                        notifications: {
-                          ...prev.notifications,
-                          weeklyReports: checked,
-                        },
-                      }))
-                    }
-                  />
-                </div>
-              </div>
-            </div>
-          </Card>
-        </TabsContent>
-
-        {/* Integration Settings */}
-        <TabsContent value="integrations">
-          <Card className="p-6">
-            <div className="space-y-6">
-              <div className="flex items-center gap-2">
-                <DatabaseIcon className="w-5 h-5" />
-                <h3 className="text-lg font-medium">Connected Services</h3>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label>Google Business Profile</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Sync with your Google Business listing
-                    </p>
-                  </div>
-                  <Switch
-                    checked={settings.integrations.googleBusiness}
-                    onCheckedChange={(checked) =>
-                      setSettings((prev) => ({
-                        ...prev,
-                        integrations: {
-                          ...prev.integrations,
-                          googleBusiness: checked,
-                        },
-                      }))
-                    }
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label>Yelp Business</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Connect your Yelp business account
-                    </p>
-                  </div>
-                  <Switch
-                    checked={settings.integrations.yelp}
-                    onCheckedChange={(checked) =>
-                      setSettings((prev) => ({
-                        ...prev,
-                        integrations: {
-                          ...prev.integrations,
-                          yelp: checked,
-                        },
-                      }))
-                    }
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label>CRM Integration</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Connect to your CRM system
-                    </p>
-                  </div>
-                  <Switch
-                    checked={settings.integrations.crm}
-                    onCheckedChange={(checked) =>
-                      setSettings((prev) => ({
-                        ...prev,
-                        integrations: {
-                          ...prev.integrations,
-                          crm: checked,
-                        },
-                      }))
-                    }
-                  />
-                </div>
-              </div>
-            </div>
-          </Card>
-        </TabsContent>
-
-        {/* Security Settings */}
-        <TabsContent value="security">
-          <Card className="p-6">
-            <div className="space-y-6">
-              <div className="flex items-center gap-2">
-                <ShieldIcon className="w-5 h-5" />
-                <h3 className="text-lg font-medium">Security Settings</h3>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label>Two-Factor Authentication</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Add an extra layer of security
-                    </p>
-                  </div>
-                  <Switch
-                    checked={settings.security.twoFactor}
-                    onCheckedChange={(checked) =>
-                      setSettings((prev) => ({
-                        ...prev,
-                        security: {
-                          ...prev.security,
-                          twoFactor: checked,
-                        },
-                      }))
-                    }
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Session Timeout (minutes)</Label>
-                  <select
-                    className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
-                    value={settings.security.sessionTimeout}
-                    onChange={(e) =>
-                      setSettings((prev) => ({
-                        ...prev,
-                        security: {
-                          ...prev.security,
-                          sessionTimeout: e.target.value,
-                        },
-                      }))
-                    }
-                  >
-                    <option value="15">15 minutes</option>
-                    <option value="30">30 minutes</option>
-                    <option value="60">1 hour</option>
-                    <option value="120">2 hours</option>
-                  </select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>IP Whitelist</Label>
-                  <Input
-                    value={settings.security.ipWhitelist}
-                    onChange={(e) =>
-                      setSettings((prev) => ({
-                        ...prev,
-                        security: {
-                          ...prev.security,
-                          ipWhitelist: e.target.value,
-                        },
-                      }))
-                    }
-                    placeholder="Enter comma-separated IP addresses"
-                  />
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-medium">Notification Settings</h3>
                   <p className="text-sm text-muted-foreground">
-                    Leave empty to allow all IPs
+                    Configure how and when you receive notifications
                   </p>
                 </div>
               </div>
-            </div>
-          </Card>
-        </TabsContent>
-
-        {/* Billing Settings */}
-        <TabsContent value="billing">
-          <Card className="p-6">
-            <div className="space-y-6">
-              <div className="flex items-center gap-2">
-                <CreditCardIcon className="w-5 h-5" />
-                <h3 className="text-lg font-medium">Billing & Subscription</h3>
-              </div>
 
               <Separator />
 
-              <div className="space-y-6">
-                <div className="grid grid-cols-2 gap-6">
-                  <Card className="p-6 relative">
-                    <div className="space-y-2">
-                      <h4 className="text-lg font-medium">Monthly Plan</h4>
-                      <div className="flex items-baseline gap-1">
-                        <span className="text-3xl font-bold">$599</span>
-                        <span className="text-muted-foreground">/month</span>
+              {/* Notification Channels */}
+              <div className="space-y-4">
+                <h4 className="text-sm font-medium">Notification Channels</h4>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-2">
+                        <MailIcon className="w-4 h-4" />
+                        <Label>Email Notifications</Label>
                       </div>
                       <p className="text-sm text-muted-foreground">
-                        Billed monthly
+                        Receive notifications via email
                       </p>
                     </div>
-                    {settings.billing.plan === "monthly" && (
-                      <div className="absolute top-4 right-4 bg-primary/10 text-primary p-2 rounded-full">
-                        <CheckIcon className="w-4 h-4" />
-                      </div>
-                    )}
-                  </Card>
-
-                  <Card className="p-6 relative">
-                    <div className="space-y-2">
-                      <h4 className="text-lg font-medium">Annual Plan</h4>
-                      <div className="flex items-baseline gap-1">
-                        <span className="text-3xl font-bold">$499</span>
-                        <span className="text-muted-foreground">/month</span>
+                    <Switch
+                      checked={settings.notifications.emailEnabled}
+                      onCheckedChange={(checked) =>
+                        updateNotificationSettings({ emailEnabled: checked })
+                      }
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-2">
+                        <BellRingIcon className="w-4 h-4" />
+                        <Label>Push Notifications</Label>
                       </div>
                       <p className="text-sm text-muted-foreground">
-                        Billed annually ($5,988/year)
+                        Receive browser notifications
                       </p>
-                      <span className="inline-block mt-2 text-sm bg-green-100 text-green-800 px-2 py-1 rounded">
-                        Save $1,200/year
-                      </span>
                     </div>
-                    {settings.billing.plan === "annual" && (
-                      <div className="absolute top-4 right-4 bg-primary/10 text-primary p-2 rounded-full">
-                        <CheckIcon className="w-4 h-4" />
+                    <Switch
+                      checked={settings.notifications.pushEnabled}
+                      onCheckedChange={(checked) =>
+                        updateNotificationSettings({ pushEnabled: checked })
+                      }
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-2">
+                        <VolumeIcon className="w-4 h-4" />
+                        <Label>Sound Alerts</Label>
                       </div>
-                    )}
-                  </Card>
+                      <p className="text-sm text-muted-foreground">
+                        Play sound for urgent notifications
+                      </p>
+                    </div>
+                    <Switch
+                      checked={settings.notifications.soundEnabled}
+                      onCheckedChange={(checked) =>
+                        updateNotificationSettings({ soundEnabled: checked })
+                      }
+                    />
+                  </div>
                 </div>
+              </div>
 
-                <div className="pt-4">
-                  <Button variant="outline">
-                    <CreditCardIcon className="w-4 h-4 mr-2" />
-                    Update Payment Method
-                  </Button>
+              {/* Urgent Notifications */}
+              <div className="space-y-4">
+                <h4 className="text-sm font-medium">Urgent Notifications</h4>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Rating Threshold for Urgent Alerts</Label>
+                    <div className="flex items-center gap-4">
+                      <div className="flex-1">
+                        <Slider
+                          value={[settings.notifications.urgentRatingThreshold]}
+                          min={1}
+                          max={4}
+                          step={1}
+                          onValueChange={([value]) =>
+                            updateNotificationSettings({
+                              urgentRatingThreshold: value,
+                            })
+                          }
+                          className="cursor-pointer"
+                        />
+                      </div>
+                      <div className="flex items-center gap-1 min-w-[80px]">
+                        <StarIcon className="w-4 h-4 text-yellow-400" />
+                        <span className="text-sm font-medium">
+                          {settings.notifications.urgentRatingThreshold} or
+                          below
+                        </span>
+                      </div>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Send urgent alerts for ratings at or below this threshold
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Alert Recipients</Label>
+                    {settings.notifications.urgentNotifications.map(
+                      (email, index) => (
+                        <div key={index} className="flex items-center gap-2">
+                          <Input
+                            type="email"
+                            value={email}
+                            onChange={(e) => updateEmail(index, e.target.value)}
+                            placeholder="Enter email address"
+                          />
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => removeEmailField(index)}
+                            disabled={
+                              settings.notifications.urgentNotifications
+                                .length === 1
+                            }
+                          >
+                            <XIcon className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ),
+                    )}
+                    <Button
+                      variant="outline"
+                      onClick={addEmailField}
+                      className="w-full"
+                    >
+                      <PlusIcon className="w-4 h-4 mr-2" />
+                      Add Another Email
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
           </Card>
         </TabsContent>
+
+        {/* Other tabs content... */}
       </Tabs>
     </div>
   );
