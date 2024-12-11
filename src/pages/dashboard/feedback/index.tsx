@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { StarRating } from "@/components/ui/star";
 import {
   Dialog,
   DialogContent,
@@ -23,7 +24,6 @@ import {
   SearchIcon,
   UserIcon,
   PhoneIcon,
-  StarIcon,
   CheckCircleIcon,
   SendIcon,
 } from "lucide-react";
@@ -237,6 +237,9 @@ const FeedbackPage = () => {
           sortedAndFilteredFeedback.map((item, index) => (
             <Card key={index} className="p-6">
               <div className="space-y-4">
+                {/* Star Rating */}
+                <StarRating rating={item.rating} />
+
                 {/* Customer Info */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
@@ -261,19 +264,9 @@ const FeedbackPage = () => {
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-1">
-                      {Array.from({ length: item.rating }).map((_, i) => (
-                        <StarIcon
-                          key={i}
-                          className="w-4 h-4 text-yellow-400 fill-current"
-                        />
-                      ))}
-                    </div>
-                    <span className="text-sm text-muted-foreground">
-                      {new Date(item.createdAt).toLocaleString()}
-                    </span>
-                  </div>
+                  <span className="text-sm text-muted-foreground">
+                    {new Date(item.createdAt).toLocaleString()}
+                  </span>
                 </div>
 
                 {/* Feedback Message */}

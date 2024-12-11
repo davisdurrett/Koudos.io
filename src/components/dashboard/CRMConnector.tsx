@@ -36,85 +36,63 @@ const CRMConnector = ({ className }: CRMConnectorProps) => {
   };
 
   return (
-    <Card className={cn("p-6", className)}>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <DatabaseIcon className="w-6 h-6 text-blue-600" />
-            </div>
-            <div>
-              <h3 className="font-semibold">CRM Integration</h3>
-              <p className="text-sm text-muted-foreground">
-                Connect your CRM to sync customer data
-              </p>
-            </div>
-          </div>
-          {isConnected ? (
-            <Badge className="bg-green-100 text-green-800">Connected</Badge>
-          ) : (
-            <Badge variant="outline">Not Connected</Badge>
-          )}
-        </div>
-
-        {isConnected ? (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
-              <div className="flex items-center gap-3">
-                <CheckCircleIcon className="w-5 h-5 text-green-600" />
-                <div>
-                  <p className="font-medium">{selectedCRM}</p>
-                  <p className="text-sm text-muted-foreground">
-                    Last synced: {new Date().toLocaleDateString()}
-                  </p>
-                </div>
+    <div className="space-y-4">
+      {isConnected ? (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+            <div className="flex items-center gap-3">
+              <CheckCircleIcon className="w-5 h-5 text-green-600" />
+              <div>
+                <p className="font-medium">{selectedCRM}</p>
+                <p className="text-sm text-muted-foreground">
+                  Last synced: {new Date().toLocaleDateString()}
+                </p>
               </div>
-              <Button
-                variant="outline"
-                className="text-destructive"
-                onClick={handleDisconnect}
-              >
-                Disconnect
-              </Button>
             </div>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>CRM Provider</Label>
-              <Select value={selectedCRM} onValueChange={setSelectedCRM}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select CRM provider" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="hubspot">HubSpot</SelectItem>
-                  <SelectItem value="zoho">Zoho</SelectItem>
-                  <SelectItem value="salesforce">Salesforce</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>API Key</Label>
-              <Input
-                type="password"
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-                placeholder="Enter your CRM API key"
-              />
-            </div>
-
             <Button
-              className="w-full"
-              onClick={handleConnect}
-              disabled={!selectedCRM || !apiKey}
+              variant="outline"
+              className="text-destructive"
+              onClick={handleDisconnect}
             >
-              Connect CRM
+              Disconnect
             </Button>
           </div>
-        )}
-      </div>
-    </Card>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label>CRM Provider</Label>
+            <Select value={selectedCRM} onValueChange={setSelectedCRM}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select CRM provider" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="hubspot">HubSpot</SelectItem>
+                <SelectItem value="zoho">Zoho</SelectItem>
+                <SelectItem value="salesforce">Salesforce</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label>API Key</Label>
+            <Input
+              type="password"
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+              placeholder="Enter your CRM API key"
+            />
+          </div>
+
+          <div>
+            <Button onClick={handleConnect}>
+              <DatabaseIcon className="w-4 h-4 mr-2" />
+              Connect {selectedCRM || "CRM"}
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 

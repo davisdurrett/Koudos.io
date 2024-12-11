@@ -1,267 +1,128 @@
 import React from "react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar } from "@/components/ui/avatar";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  MessageSquareIcon,
-  StarIcon,
-  ThumbsUpIcon,
-  PencilIcon,
-  CheckIcon,
-  ClockIcon,
-  CircleDotIcon,
-  SearchIcon,
-  PhoneIcon,
-  MailIcon,
-  UserIcon,
-} from "lucide-react";
+import { SparklesIcon } from "lucide-react";
+import { RedPlusIcon } from "@/components/icons/RedPlusIcon";
+import { StarRating } from "@/components/ui/star";
 import AIResponseEditor from "./AIResponseEditor";
-import { escalationService } from "@/lib/services/escalation";
-import { crmService } from "@/lib/services/crm";
+import ReviewRecoveryModal from "./ReviewRecoveryModal";
 
-interface ReviewCardProps {
-  review?: {
-    id: string;
-    author: {
-      name: string;
-      avatar?: string;
-    };
-    rating: number;
-    date: string;
-    text: string;
-    sentiment?: "positive" | "neutral" | "negative";
-    status?: "pending" | "responded" | "flagged";
-    source?: "google" | "yelp";
-    response?: string;
+interface Review {
+  id: string;
+  author: {
+    name: string;
+    avatar?: string;
+    email?: string;
+    phone?: string;
   };
-  onRespond?: (reviewId: string, response: string) => void;
+  rating: number;
+  date: string;
+  text: string;
+  sentiment?: "positive" | "neutral" | "negative";
+  status?: "pending" | "responded" | "flagged" | "in_recovery";
+  response?: string;
 }
 
-const ReviewCard = ({
-  review = {
-    id: "1",
-    author: {
-      name: "John Smith",
-      avatar: undefined,
-    },
-    rating: 4,
-    date: "2024-03-15",
-    text: "Really enjoyed my experience here. The staff was friendly and professional. Would definitely recommend to others!",
-    sentiment: "positive",
-    status: "pending",
-    source: "google",
-  },
-  onRespond = () => {},
-}: ReviewCardProps) => {
+interface ReviewCardProps {
+  review: Review;
+  onRespond?: (reviewId: string, response: string) => void;
+  onStatusUpdate?: (
+    reviewId: string,
+    status: "pending" | "in_recovery" | "resolved",
+  ) => void;
+}
+
+const ReviewCard = ({ review, onRespond = () => {} }: ReviewCardProps) => {
   const [isEditorOpen, setIsEditorOpen] = React.useState(false);
-  const [isCRMModalOpen, setIsCRMModalOpen] = React.useState(false);
-  const [crmCustomer, setCRMCustomer] = React.useState<any>(null);
-  const [isSearching, setIsSearching] = React.useState(false);
-  const { toast } = useToast();
+  const [isRecoveryModalOpen, setIsRecoveryModalOpen] = React.useState(false);
 
-  const handleResponse = (response: string) => {
-    // If it's a low rating review (1-2 stars), create an escalation
-    if (review.rating <= 2) {
-      escalationService
-        .createEscalation({
-          reviewId: review.id,
-          customerId: "customer-123",
-          rating: review.rating,
-          reviewText: review.text,
-        })
-        .then(() => {
-          toast({
-            title: "Escalation Created",
-            description:
-              "This review has been escalated for further attention.",
-            variant: "default",
-          });
-        });
-    }
-
+  const handleSubmitResponse = (response: string) => {
     onRespond(review.id, response);
     setIsEditorOpen(false);
   };
 
-  const handleSearchCRM = async () => {
-    setIsSearching(true);
-    try {
-      // Search CRM by reviewer name
-      const customer = await crmService.searchCustomer(review.author.name);
-      if (customer) {
-        setCRMCustomer(customer);
-        setIsCRMModalOpen(true);
-      } else {
-        toast({
-          title: "No Match Found",
-          description: "No matching customer found in your CRM.",
-          variant: "default",
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Search Failed",
-        description: "Failed to search CRM. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSearching(false);
-    }
+  const handleStatusUpdate = (
+    status: "pending" | "in_recovery" | "resolved",
+  ) => {
+    onStatusUpdate?.(review.id, status);
+    setIsRecoveryModalOpen(false);
   };
 
-  const getSentimentColor = (sentiment: string) => {
-    switch (sentiment) {
-      case "positive":
-        return "bg-green-100 text-green-800";
-      case "negative":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const getStatusColor = (status: string) => {
+  const getStatusText = (status: string) => {
     switch (status) {
+      case "pending":
+        return "Needs Response";
       case "responded":
-        return "bg-green-100 text-green-800";
+        return "Responded";
       case "flagged":
-        return "bg-red-100 text-red-800";
+        return "Flagged";
+      case "in_recovery":
+        return "In Recovery";
       default:
-        return "bg-yellow-100 text-yellow-800";
-    }
-  };
-
-  const getSourceIcon = (source: string) => {
-    switch (source) {
-      case "google":
-        return (
-          <img
-            src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg"
-            alt="Google"
-            className="w-4 h-4"
-          />
-        );
-      case "yelp":
-        return (
-          <img
-            src="https://upload.wikimedia.org/wikipedia/commons/a/ad/Yelp_Logo.svg"
-            alt="Yelp"
-            className="w-4 h-4"
-          />
-        );
-      default:
-        return null;
+        return status;
     }
   };
 
   return (
     <>
       <Card className="w-full bg-background p-6 space-y-4">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Avatar className="w-10 h-10 bg-primary/10">
-              {review.author.avatar ? (
-                <img
-                  src={review.author.avatar}
-                  alt={review.author.name}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <span className="text-sm font-medium">
-                  {review.author.name
-                    .split(" ")
-                    .map((n) => n[0])
-                    .join("")}
-                </span>
-              )}
-            </Avatar>
-            <div>
-              <h3 className="font-medium">{review.author.name}</h3>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                {review.source && (
-                  <div className="flex items-center gap-1">
-                    {getSourceIcon(review.source)}
-                    <span className="capitalize">{review.source}</span>
-                  </div>
-                )}
-                <span>•</span>
-                <div className="flex items-center">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <StarIcon
-                      key={i}
+        <div className="space-y-4">
+          {/* Star Rating */}
+          <StarRating rating={review.rating} />
+
+          {/* Author Info */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">{review.author.name}</span>
+                  {review.status && (
+                    <Badge
+                      variant="secondary"
                       className={cn(
-                        "w-4 h-4",
-                        i < review.rating
-                          ? "text-yellow-400 fill-current"
-                          : "text-gray-300",
+                        review.status === "responded" &&
+                          "bg-green-100 text-green-800",
+                        review.status === "pending" &&
+                          "bg-yellow-100 text-yellow-800",
+                        review.status === "flagged" &&
+                          "bg-red-100 text-red-800",
+                        review.status === "in_recovery" &&
+                          "bg-blue-100 text-blue-800",
                       )}
-                    />
-                  ))}
+                    >
+                      {getStatusText(review.status)}
+                    </Badge>
+                  )}
                 </div>
-                <span>•</span>
-                <time dateTime={review.date}>
-                  {new Date(review.date).toLocaleDateString()}
-                </time>
+                {review.author.email && (
+                  <span className="text-sm text-muted-foreground">
+                    {review.author.email}
+                  </span>
+                )}
+                {review.author.phone && (
+                  <span className="text-sm text-muted-foreground">
+                    {review.author.phone}
+                  </span>
+                )}
               </div>
             </div>
+            <span className="text-sm text-muted-foreground">
+              {new Date(review.date).toLocaleDateString()}
+            </span>
           </div>
-          <div className="flex items-center gap-2">
-            {review.sentiment && (
-              <Badge
-                variant="secondary"
-                className={cn(
-                  "capitalize",
-                  getSentimentColor(review.sentiment),
-                )}
-              >
-                {review.sentiment}
-              </Badge>
-            )}
-            {review.status && (
-              <Badge
-                variant="secondary"
-                className={cn("capitalize", getStatusColor(review.status))}
-              >
-                <span className="flex items-center gap-1">
-                  {review.status === "responded" && (
-                    <CheckIcon className="w-3 h-3" />
-                  )}
-                  {review.status === "pending" && (
-                    <ClockIcon className="w-3 h-3" />
-                  )}
-                  {review.status}
-                </span>
-              </Badge>
-            )}
-          </div>
-        </div>
 
-        {/* Review Content */}
-        <div className="pl-14">
-          <p className="text-sm text-foreground">{review.text}</p>
+          {/* Review Content */}
+          <div className="space-y-2">
+            <p className="text-sm">{review.text}</p>
+          </div>
 
           {/* Response Section */}
           {review.response && (
-            <div className="mt-4 p-4 bg-muted rounded-lg">
-              <div className="flex items-start gap-2">
-                <MessageSquareIcon className="w-4 h-4 text-muted-foreground mt-1" />
-                <div>
-                  <span className="text-sm font-medium">Your Response</span>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {review.response}
-                  </p>
-                </div>
-              </div>
+            <div className="pl-4 border-l-2 border-muted space-y-1">
+              <p className="text-sm font-medium">Your Response:</p>
+              <p className="text-sm text-muted-foreground">{review.response}</p>
             </div>
           )}
 
@@ -270,104 +131,52 @@ const ReviewCard = ({
             <Button
               variant="outline"
               size="sm"
-              className="text-muted-foreground"
+              className={
+                review.response
+                  ? "text-gray-600 hover:bg-gray-100"
+                  : "text-[#8B5CF6] border-[#8B5CF6] hover:bg-[#8B5CF6]/10"
+              }
               onClick={() => setIsEditorOpen(true)}
             >
-              <PencilIcon className="w-4 h-4 mr-1" />
-              {review.response ? "Edit Response" : "Respond"}
+              <SparklesIcon
+                className={cn(
+                  "w-4 h-4 mr-1",
+                  !review.response && "text-[#8B5CF6]",
+                )}
+              />
+              {review.response ? "Edit Response" : "AI Response"}
             </Button>
-            {review.rating <= 2 && (
+            {review.rating <= 3 && review.status !== "in_recovery" && (
               <Button
                 variant="outline"
                 size="sm"
-                className="text-muted-foreground"
-                onClick={handleSearchCRM}
-                disabled={isSearching}
+                className="text-red-500 border-red-500 hover:bg-red-500/10"
+                onClick={() => setIsRecoveryModalOpen(true)}
               >
-                <SearchIcon className="w-4 h-4 mr-1" />
-                {isSearching ? "Searching..." : "Search CRM"}
+                <RedPlusIcon className="w-4 h-4 mr-1" />
+                Review Recovery
               </Button>
             )}
-            <Button variant="ghost" size="sm" className="text-muted-foreground">
-              <ThumbsUpIcon className="w-4 h-4 mr-1" />
-              Mark as Helpful
-            </Button>
           </div>
         </div>
       </Card>
 
-      {/* AI Response Editor */}
       <AIResponseEditor
         isOpen={isEditorOpen}
         onClose={() => setIsEditorOpen(false)}
-        onSubmit={handleResponse}
+        onSubmit={handleSubmitResponse}
         reviewText={review.text}
+        customerName={review.author.name}
+        rating={review.rating}
+        initialResponse={review.response}
       />
 
-      {/* CRM Customer Modal */}
-      <Dialog open={isCRMModalOpen} onOpenChange={setIsCRMModalOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Customer Details</DialogTitle>
-          </DialogHeader>
-          {crmCustomer && (
-            <div className="space-y-4">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <UserIcon className="w-6 h-6 text-primary" />
-                </div>
-                <div>
-                  <h3 className="font-medium">{crmCustomer.name}</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Customer since{" "}
-                    {new Date(crmCustomer.createdAt).getFullYear()}
-                  </p>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-sm">
-                  <MailIcon className="w-4 h-4 text-muted-foreground" />
-                  <a
-                    href={`mailto:${crmCustomer.email}`}
-                    className="text-primary hover:underline"
-                  >
-                    {crmCustomer.email}
-                  </a>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <PhoneIcon className="w-4 h-4 text-muted-foreground" />
-                  <a
-                    href={`tel:${crmCustomer.phone}`}
-                    className="text-primary hover:underline"
-                  >
-                    {crmCustomer.phone}
-                  </a>
-                </div>
-              </div>
-
-              <div className="pt-4 border-t">
-                <h4 className="text-sm font-medium mb-2">Recent Activity</h4>
-                <div className="space-y-2">
-                  {crmCustomer.recentActivity?.map(
-                    (activity: any, index: number) => (
-                      <div
-                        key={index}
-                        className="text-sm text-muted-foreground flex items-center gap-2"
-                      >
-                        <span className="w-24 text-xs">
-                          {new Date(activity.date).toLocaleDateString()}
-                        </span>
-                        <span>{activity.description}</span>
-                      </div>
-                    ),
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <ReviewRecoveryModal
+        isOpen={isRecoveryModalOpen}
+        onClose={() => setIsRecoveryModalOpen(false)}
+        onStatusUpdate={handleStatusUpdate}
+        review={review}
+      />
     </>
   );
 };

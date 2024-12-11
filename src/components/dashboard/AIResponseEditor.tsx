@@ -11,18 +11,22 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ThumbsUpIcon, ThumbsDownIcon, WandIcon, SendIcon } from "lucide-react";
+import {
+  ThumbsUpIcon,
+  ThumbsDownIcon,
+  WandIcon,
+  SendIcon,
+  StarIcon,
+} from "lucide-react";
 
 interface AIResponseEditorProps {
   isOpen?: boolean;
   onClose?: () => void;
   onSubmit?: (response: string) => void;
   reviewText?: string;
-  suggestions?: Array<{
-    text: string;
-    tone: string;
-    confidence: number;
-  }>;
+  customerName?: string;
+  rating?: number;
+  initialResponse?: string;
 }
 
 const AIResponseEditor = ({
@@ -30,34 +34,70 @@ const AIResponseEditor = ({
   onClose = () => {},
   onSubmit = () => {},
   reviewText = "Great service and friendly staff! The food was delicious and arrived quickly.",
-  suggestions = [
+  customerName = "John",
+  rating = 5,
+  initialResponse = "",
+}: AIResponseEditorProps) => {
+  const [selectedResponse, setSelectedResponse] =
+    React.useState(initialResponse);
+  const [activeTab, setActiveTab] = React.useState(
+    initialResponse ? "custom" : "suggestions",
+  );
+
+  // Get first name only
+  const firstName = customerName.split(" ")[0];
+
+  const suggestions = [
     {
-      text: "Thank you for your wonderful feedback! We're delighted to hear that you enjoyed both our service and food. Our team takes great pride in delivering quick, friendly service and delicious meals. We appreciate you taking the time to share your experience!",
+      text:
+        rating >= 4
+          ? `Thank you for your wonderful ${rating}-star feedback, ${firstName}! We're delighted to hear that you enjoyed your experience with us. Our team takes great pride in delivering excellent service, and your kind words mean a lot to us. We appreciate you taking the time to share your thoughts!`
+          : `Thank you for your feedback, ${firstName}. We sincerely apologize that your experience didn't meet your expectations. We take all feedback seriously and would love to learn more about how we can improve. Please feel free to reach out to our customer service team directly so we can make things right.`,
       tone: "Professional",
       confidence: 0.95,
     },
     {
-      text: "We're so happy you had a great time with us! 😊 Your kind words about our staff and food mean the world to us. Quick service is always our goal, and we're glad we hit the mark! Hope to see you again soon!",
+      text:
+        rating >= 4
+          ? `Hi ${firstName}! 😊 We're so happy you had a great experience with us! Your ${rating}-star review means the world to us. Thank you for taking the time to share your feedback - we can't wait to serve you again soon!`
+          : `Hi ${firstName}, we're really sorry to hear about your experience. This isn't the level of service we aim to provide. We'd love to hear more about what went wrong and how we can make it right. Could you please reach out to us directly? We value your feedback and want to ensure a better experience next time.`,
       tone: "Casual",
       confidence: 0.88,
     },
-  ],
-}: AIResponseEditorProps) => {
-  const [selectedResponse, setSelectedResponse] = React.useState("");
-  const [activeTab, setActiveTab] = React.useState("suggestions");
+  ];
+
+  const handleSuggestionClick = (suggestion: string) => {
+    setSelectedResponse(suggestion);
+    setActiveTab("custom");
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-[800px] bg-background">
         <DialogHeader>
-          <DialogTitle>AI Response Editor</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <WandIcon className="w-5 h-5 text-[#8B5CF6]" />
+            <span className="text-[#8B5CF6]">AI Response Editor</span>
+          </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
           {/* Original Review */}
           <div className="p-4 bg-muted rounded-lg">
-            <h3 className="text-sm font-medium mb-2">Original Review</h3>
-            <p className="text-sm text-muted-foreground">{reviewText}</p>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
+                {Array.from({ length: rating }).map((_, i) => (
+                  <StarIcon
+                    key={i}
+                    className="w-4 h-4 text-yellow-400 fill-current"
+                  />
+                ))}
+              </div>
+              <span className="text-sm text-muted-foreground">
+                from {customerName}
+              </span>
+            </div>
+            <p className="text-sm mt-2">{reviewText}</p>
           </div>
 
           {/* Response Editor Tabs */}
@@ -67,11 +107,17 @@ const AIResponseEditor = ({
             className="w-full"
           >
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="suggestions">
+              <TabsTrigger
+                value="suggestions"
+                className="text-[#8B5CF6] border-[#8B5CF6] data-[state=active]:bg-[#8B5CF6]/10"
+              >
                 <WandIcon className="w-4 h-4 mr-2" />
                 AI Suggestions
               </TabsTrigger>
-              <TabsTrigger value="custom">
+              <TabsTrigger
+                value="custom"
+                className="text-[#8B5CF6] border-[#8B5CF6] data-[state=active]:bg-[#8B5CF6]/10"
+              >
                 <SendIcon className="w-4 h-4 mr-2" />
                 Custom Response
               </TabsTrigger>
@@ -84,13 +130,18 @@ const AIResponseEditor = ({
                   className={cn(
                     "p-4 border rounded-lg space-y-2 cursor-pointer transition-colors",
                     selectedResponse === suggestion.text
-                      ? "border-primary bg-primary/5"
-                      : "hover:bg-muted/50",
+                      ? "border-[#8B5CF6] bg-[#8B5CF6]/5"
+                      : "hover:border-[#8B5CF6] hover:bg-[#8B5CF6]/5",
                   )}
-                  onClick={() => setSelectedResponse(suggestion.text)}
+                  onClick={() => handleSuggestionClick(suggestion.text)}
                 >
                   <div className="flex items-center justify-between">
-                    <Badge variant="secondary">{suggestion.tone}</Badge>
+                    <Badge
+                      variant="secondary"
+                      className="bg-[#8B5CF6]/10 text-[#8B5CF6] border-[#8B5CF6]"
+                    >
+                      {suggestion.tone}
+                    </Badge>
                     <span className="text-sm text-muted-foreground">
                       {Math.round(suggestion.confidence * 100)}% confidence
                     </span>
@@ -100,14 +151,14 @@ const AIResponseEditor = ({
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="text-muted-foreground"
+                      className="text-[#8B5CF6] hover:bg-[#8B5CF6]/10 border-[#8B5CF6]"
                     >
                       <ThumbsUpIcon className="w-4 h-4 mr-1" /> Helpful
                     </Button>
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="text-muted-foreground"
+                      className="text-[#8B5CF6] hover:bg-[#8B5CF6]/10 border-[#8B5CF6]"
                     >
                       <ThumbsDownIcon className="w-4 h-4 mr-1" /> Not Helpful
                     </Button>
@@ -128,12 +179,17 @@ const AIResponseEditor = ({
         </div>
 
         <DialogFooter className="flex justify-between items-center">
-          <Button variant="ghost" onClick={onClose}>
+          <Button
+            variant="ghost"
+            onClick={onClose}
+            className="text-[#8B5CF6] hover:bg-[#8B5CF6]/10 border-[#8B5CF6]"
+          >
             Cancel
           </Button>
           <Button
             onClick={() => onSubmit(selectedResponse)}
             disabled={!selectedResponse}
+            className="bg-[#8B5CF6] hover:bg-[#8B5CF6]/90 text-white border-[#8B5CF6]"
           >
             <SendIcon className="w-4 h-4 mr-2" />
             Send Response

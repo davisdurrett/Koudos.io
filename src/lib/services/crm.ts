@@ -1,22 +1,67 @@
-interface CRMCredentials {
-  platform: string;
-  apiKey: string;
-  domain?: string;
-}
-
-interface CRMConnection {
+interface Customer {
   id: string;
-  platform: string;
-  status: "connected" | "disconnected" | "error";
-  lastSync?: string;
-  error?: string;
+  name: string;
+  email: string;
+  phone: string;
+  createdAt: string;
+  recentActivity: Array<{
+    type: string;
+    date: string;
+    details: string;
+  }>;
 }
 
 class CRMService {
   private static instance: CRMService;
-  private connections: Map<string, CRMConnection> = new Map();
+  private customers: Map<string, Customer> = new Map();
 
-  private constructor() {}
+  private constructor() {
+    // Initialize with some mock data
+    this.customers.set("Jennifer Lee", {
+      id: "cust_1",
+      name: "Jennifer Lee",
+      email: "jennifer@example.com",
+      phone: "(555) 777-8888",
+      createdAt: "2023-01-15",
+      recentActivity: [
+        {
+          type: "appointment",
+          date: new Date().toISOString(),
+          details: "Regular service appointment",
+        },
+      ],
+    });
+
+    this.customers.set("Emma Thompson", {
+      id: "cust_2",
+      name: "Emma Thompson",
+      email: "emma@example.com",
+      phone: "(555) 123-4567",
+      createdAt: "2023-03-20",
+      recentActivity: [
+        {
+          type: "purchase",
+          date: new Date().toISOString(),
+          details: "Premium service package",
+        },
+      ],
+    });
+
+    this.customers.set("Kevin Patel", {
+      id: "cust_3",
+      name: "Kevin Patel",
+      email: "kevin@example.com",
+      phone: "(555) 678-9012",
+      createdAt: "2023-06-10",
+      recentActivity: [
+        {
+          type: "complaint",
+          date: new Date().toISOString(),
+          details: "Service delay issue",
+        },
+      ],
+    });
+  }
 
   static getInstance(): CRMService {
     if (!CRMService.instance) {
@@ -25,82 +70,51 @@ class CRMService {
     return CRMService.instance;
   }
 
-  async connect(credentials: CRMCredentials): Promise<CRMConnection> {
-    try {
-      // Validate credentials
-      if (!this.validateCredentials(credentials)) {
-        throw new Error("Invalid credentials");
-      }
-
-      // Simulate API call to CRM platform
-      const connection = await this.testConnection(credentials);
-
-      // Store connection
-      this.connections.set(connection.id, connection);
-
-      return connection;
-    } catch (error) {
-      throw new Error(
-        `Failed to connect to ${credentials.platform}: ${error.message}`,
-      );
-    }
-  }
-
-  private validateCredentials(credentials: CRMCredentials): boolean {
-    const { platform, apiKey, domain } = credentials;
-
-    if (!platform || !apiKey) return false;
-
-    // Platform-specific validation
-    switch (platform) {
-      case "hubspot":
-        return Boolean(domain && domain.includes("hubspot.com"));
-      case "salesforce":
-        return apiKey.length >= 32;
-      case "zoho":
-        return apiKey.length >= 16;
-      default:
-        return true;
-    }
-  }
-
-  private async testConnection(
-    credentials: CRMCredentials,
-  ): Promise<CRMConnection> {
-    // Simulate API call delay
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    // Generate unique connection ID
-    const id = `${credentials.platform}-${Date.now()}`;
-
-    return {
-      id,
-      platform: credentials.platform,
-      status: "connected",
-      lastSync: new Date().toISOString(),
-    };
-  }
-
-  async disconnect(connectionId: string): Promise<void> {
-    const connection = this.connections.get(connectionId);
-    if (!connection) {
-      throw new Error("Connection not found");
-    }
-
-    // Simulate cleanup
+  async searchCustomer(name: string): Promise<Customer | null> {
+    // Simulate API delay
     await new Promise((resolve) => setTimeout(resolve, 500));
 
-    // Update connection status
-    connection.status = "disconnected";
-    this.connections.set(connectionId, connection);
+    // Case-insensitive search
+    const customer = this.customers.get(name);
+    if (!customer) {
+      // Try to find a partial match
+      for (const [key, value] of this.customers.entries()) {
+        if (key.toLowerCase().includes(name.toLowerCase())) {
+          return value;
+        }
+      }
+      return null;
+    }
+    return customer;
   }
 
-  async getConnection(connectionId: string): Promise<CRMConnection | null> {
-    return this.connections.get(connectionId) || null;
+  async updateCustomer(
+    customerId: string,
+    updates: Partial<Customer>,
+  ): Promise<void> {
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    for (const [key, value] of this.customers.entries()) {
+      if (value.id === customerId) {
+        this.customers.set(key, { ...value, ...updates });
+        break;
+      }
+    }
   }
 
-  async getAllConnections(): Promise<CRMConnection[]> {
-    return Array.from(this.connections.values());
+  async addActivity(
+    customerId: string,
+    activity: Customer["recentActivity"][0],
+  ): Promise<void> {
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    for (const [key, value] of this.customers.entries()) {
+      if (value.id === customerId) {
+        value.recentActivity.unshift(activity);
+        this.customers.set(key, value);
+        break;
+      }
+    }
   }
 }
 

@@ -4,6 +4,7 @@ import DashboardLayout from "./pages/dashboard";
 import AdminLayout from "./pages/admin/layout";
 import DashboardHome from "./pages/dashboard/home";
 import Reviews from "./pages/dashboard/reviews";
+import ReviewsPage from "./pages/dashboard/reviews/index";
 import FeedbackPage from "./pages/dashboard/feedback/index";
 import TriggersPage from "./pages/dashboard/triggers";
 import Settings from "./pages/dashboard/settings/index";
@@ -60,7 +61,7 @@ function App() {
             {/* Protected Dashboard Routes */}
             <Route path="/" element={<DashboardLayout />}>
               <Route index element={<DashboardHome />} />
-              <Route path="reviews" element={<Reviews />} />
+              <Route path="reviews" element={<ReviewsPage />} />
               <Route path="automations" element={<TriggersPage />} />
               <Route path="feedback" element={<FeedbackPage />} />
               <Route path="settings/*" element={<Settings />} />
