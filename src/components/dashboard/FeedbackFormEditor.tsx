@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { useSettings } from "@/lib/contexts/settings-context";
 import {
@@ -14,14 +13,16 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { ImageIcon, SendIcon, PlusIcon, XIcon } from "lucide-react";
+import { ImageIcon, SendIcon, UploadIcon } from "lucide-react";
+import FeedbackFormBuilder from "./FeedbackFormBuilder";
+
+interface FormField {
+  id: string;
+  type: "category" | "comment";
+  label: string;
+  required: boolean;
+  options?: string[];
+}
 
 interface FeedbackFormEditorProps {
   isOpen: boolean;
@@ -30,12 +31,26 @@ interface FeedbackFormEditorProps {
   formData: {
     title: string;
     description: string;
-    categories: string[];
+    fields?: FormField[];
     logo?: string;
-    showCategories?: boolean;
-    showComments?: boolean;
   };
 }
+
+const defaultFields: FormField[] = [
+  {
+    id: "category",
+    type: "category",
+    label: "What was the main issue?",
+    required: true,
+    options: ["Service Quality", "Wait Time", "Cleanliness", "Staff", "Other"],
+  },
+  {
+    id: "comments",
+    type: "comment",
+    label: "Additional Comments",
+    required: false,
+  },
+];
 
 const FeedbackFormEditor = ({
   isOpen,
@@ -43,158 +58,134 @@ const FeedbackFormEditor = ({
   onSave,
   formData,
 }: FeedbackFormEditorProps) => {
-  const { settings, updateBusinessSettings } = useSettings();
+  const { settings } = useSettings();
   const [localFormData, setLocalFormData] = React.useState({
     ...formData,
-    showCategories: formData.showCategories ?? true,
-    showComments: formData.showComments ?? true,
+    fields: formData.fields || defaultFields,
+    logo: formData.logo || "",
   });
-  const [newCategory, setNewCategory] = React.useState("");
+
+  const handleSave = () => {
+    onSave(localFormData);
+    onClose();
+  };
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Check file size (max 2MB)
+      if (file.size > 2 * 1024 * 1024) {
+        alert("Logo file size must be less than 2MB");
+        return;
+      }
+
       const reader = new FileReader();
       reader.onloadend = () => {
-        updateBusinessSettings({
-          logo: reader.result as string,
-        });
+        // Create an image element to check dimensions
+        const img = new Image();
+        img.onload = () => {
+          if (img.width > 300 || img.height > 100) {
+            alert("Logo dimensions should be 300x100px or smaller");
+            return;
+          }
+          setLocalFormData((prev) => ({
+            ...prev,
+            logo: reader.result as string,
+          }));
+        };
+        img.src = reader.result as string;
       };
       reader.readAsDataURL(file);
     }
-  };
-
-  const handleAddCategory = () => {
-    if (newCategory.trim()) {
-      setLocalFormData((prev) => ({
-        ...prev,
-        categories: [...prev.categories, newCategory.trim()],
-      }));
-      setNewCategory("");
-    }
-  };
-
-  const handleRemoveCategory = (index: number) => {
-    setLocalFormData((prev) => ({
-      ...prev,
-      categories: prev.categories.filter((_, i) => i !== index),
-    }));
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-[1000px] h-[80vh]">
         <DialogHeader>
-          <DialogTitle>Edit Feedback Form</DialogTitle>
+          <DialogTitle>Customize Feedback Form</DialogTitle>
         </DialogHeader>
 
         <div className="grid grid-cols-2 gap-6 overflow-y-auto pr-2">
           {/* Editor Section */}
           <div className="space-y-6">
             <div className="space-y-4">
-              {/* Logo Upload */}
-              <div className="space-y-2">
-                <Label>Form Logo</Label>
-                <Card className="p-4 border-dashed">
-                  <div className="space-y-4">
-                    <Input
+              {/* Basic Settings */}
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Form Logo</Label>
+                  <div className="flex items-center gap-4">
+                    <Button
+                      variant="outline"
+                      onClick={() =>
+                        document.getElementById("logo-upload")?.click()
+                      }
+                    >
+                      <UploadIcon className="w-4 h-4 mr-2" />
+                      Upload Logo
+                    </Button>
+                    {localFormData.logo && (
+                      <Button
+                        variant="outline"
+                        onClick={() =>
+                          setLocalFormData((prev) => ({ ...prev, logo: "" }))
+                        }
+                      >
+                        Remove Logo
+                      </Button>
+                    )}
+                    <input
+                      id="logo-upload"
                       type="file"
-                      accept="image/*"
+                      accept="image/png,image/jpeg,image/svg+xml"
+                      className="hidden"
                       onChange={handleLogoUpload}
                     />
-                    <p className="text-sm text-muted-foreground">
-                      Upload your logo to brand your feedback form. Recommended
-                      size: 200x60px
-                    </p>
                   </div>
-                </Card>
-              </div>
+                  <p className="text-xs text-muted-foreground">
+                    Recommended: 300x100px PNG or SVG with transparent
+                    background. Max size: 2MB
+                  </p>
+                </div>
 
-              <div className="space-y-2">
-                <Label>Form Title</Label>
-                <Input
-                  value={localFormData.title}
-                  onChange={(e) =>
-                    setLocalFormData((prev) => ({
-                      ...prev,
-                      title: e.target.value,
-                    }))
-                  }
-                  placeholder="Enter form title"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Form Description</Label>
-                <Textarea
-                  value={localFormData.description}
-                  onChange={(e) =>
-                    setLocalFormData((prev) => ({
-                      ...prev,
-                      description: e.target.value,
-                    }))
-                  }
-                  placeholder="Enter form description"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label>Categories Section</Label>
-                  <Switch
-                    checked={localFormData.showCategories}
-                    onCheckedChange={(checked) =>
+                <div className="space-y-2">
+                  <Label>Form Title</Label>
+                  <Input
+                    value={localFormData.title}
+                    onChange={(e) =>
                       setLocalFormData((prev) => ({
                         ...prev,
-                        showCategories: checked,
+                        title: e.target.value,
                       }))
                     }
+                    placeholder="Enter form title"
                   />
                 </div>
-                {localFormData.showCategories && (
-                  <div className="space-y-2">
-                    {localFormData.categories.map((category, index) => (
-                      <div key={index} className="flex items-center gap-2">
-                        <Input value={category} disabled />
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleRemoveCategory(index)}
-                        >
-                          <XIcon className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    ))}
-                    <div className="flex items-center gap-2">
-                      <Input
-                        value={newCategory}
-                        onChange={(e) => setNewCategory(e.target.value)}
-                        placeholder="Add new category"
-                        onKeyPress={(e) =>
-                          e.key === "Enter" && handleAddCategory()
-                        }
-                      />
-                      <Button onClick={handleAddCategory}>
-                        <PlusIcon className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </div>
 
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label>Comments Section</Label>
-                  <Switch
-                    checked={localFormData.showComments}
-                    onCheckedChange={(checked) =>
+                <div className="space-y-2">
+                  <Label>Form Description</Label>
+                  <Textarea
+                    value={localFormData.description}
+                    onChange={(e) =>
                       setLocalFormData((prev) => ({
                         ...prev,
-                        showComments: checked,
+                        description: e.target.value,
                       }))
                     }
+                    placeholder="Enter form description"
                   />
                 </div>
+              </div>
+
+              {/* Form Builder */}
+              <div className="space-y-4">
+                <Label>Form Fields</Label>
+                <FeedbackFormBuilder
+                  fields={localFormData.fields}
+                  onChange={(fields) =>
+                    setLocalFormData((prev) => ({ ...prev, fields }))
+                  }
+                />
               </div>
             </div>
           </div>
@@ -204,11 +195,11 @@ const FeedbackFormEditor = ({
             <h3 className="text-sm font-medium mb-4">Live Preview</h3>
             <Card className="p-6 bg-background">
               <div className="space-y-6">
-                {settings.business.logo ? (
+                {localFormData.logo ? (
                   <div className="flex justify-center">
                     <img
-                      src={settings.business.logo}
-                      alt="Business logo"
+                      src={localFormData.logo}
+                      alt="Form logo"
                       className="h-12 object-contain"
                     />
                   </div>
@@ -224,38 +215,37 @@ const FeedbackFormEditor = ({
                   </p>
                 </div>
 
-                <div className="space-y-4">
-                  {localFormData.showCategories && (
-                    <div className="space-y-2">
-                      <Label>What was the main issue? 🤔</Label>
-                      <Select disabled>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a category" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {localFormData.categories.map((category) => (
-                            <SelectItem
-                              key={category}
-                              value={category.toLowerCase().replace(/ /g, "_")}
-                            >
-                              {category}
-                            </SelectItem>
+                <div className="space-y-6">
+                  {localFormData.fields.map((field) => (
+                    <div key={field.id} className="space-y-2">
+                      <Label>
+                        {field.label}
+                        {field.required && (
+                          <span className="text-red-500 ml-1">*</span>
+                        )}
+                      </Label>
+                      {field.type === "category" && (
+                        <select
+                          disabled
+                          className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          <option value="">Select an option</option>
+                          {field.options?.map((option) => (
+                            <option key={option} value={option}>
+                              {option}
+                            </option>
                           ))}
-                        </SelectContent>
-                      </Select>
+                        </select>
+                      )}
+                      {field.type === "comment" && (
+                        <Textarea
+                          disabled
+                          placeholder="Enter your feedback here..."
+                          className="min-h-[100px]"
+                        />
+                      )}
                     </div>
-                  )}
-
-                  {localFormData.showComments && (
-                    <div className="space-y-2">
-                      <Label>Additional Comments 📝</Label>
-                      <Textarea
-                        placeholder="Tell us more about your experience..."
-                        className="min-h-[100px] resize-none"
-                        disabled
-                      />
-                    </div>
-                  )}
+                  ))}
 
                   <Button className="w-full" disabled>
                     <SendIcon className="w-4 h-4 mr-2" />
@@ -271,7 +261,7 @@ const FeedbackFormEditor = ({
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={() => onSave(localFormData)}>Save Changes</Button>
+          <Button onClick={handleSave}>Save Changes</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

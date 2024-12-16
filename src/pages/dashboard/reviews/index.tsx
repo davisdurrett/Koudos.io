@@ -1,6 +1,7 @@
 import React from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useSettings } from "@/lib/contexts/settings-context";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import ReviewCard from "@/components/dashboard/ReviewCard";
@@ -11,7 +12,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { SearchIcon } from "lucide-react";
+import { SearchIcon, SparklesIcon } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 
 interface Review {
   id: string;
@@ -31,6 +33,7 @@ interface Review {
 
 const Reviews = () => {
   const [sortBy, setSortBy] = React.useState("newest");
+  const { settings, updateNotificationSettings } = useSettings();
   const [search, setSearch] = React.useState("");
   const [filterBy, setFilterBy] = React.useState("all");
 
@@ -43,7 +46,7 @@ const Reviews = () => {
       },
       rating: 2,
       date: new Date().toISOString(),
-      text: "Service was slow and the staff seemed disorganized. Not what I expected based on the reviews.",
+      text: "Had to wait over 45 minutes past my appointment time. Staff seemed disorganized and there was no communication about the delay. Very frustrating experience.",
       status: "pending",
     },
     {
@@ -54,10 +57,10 @@ const Reviews = () => {
       },
       rating: 5,
       date: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-      text: "Absolutely fantastic experience! The staff was incredibly friendly and professional.",
+      text: "Absolutely fantastic experience! Dr. Smith and his team were incredibly thorough and took the time to explain everything. The new facility is beautiful and spotlessly clean. Highly recommend!",
       status: "responded",
       response:
-        "Thank you for your wonderful feedback, Michael! We're thrilled to hear you had such a great experience with us.",
+        "Thank you for your wonderful feedback, Michael! We're thrilled to hear you had such a great experience with Dr. Smith and our team. We work hard to provide top-notch care in a comfortable environment, and it's great to know we met your expectations. Looking forward to seeing you at your next visit!",
     },
     {
       id: "3",
@@ -68,44 +71,57 @@ const Reviews = () => {
       },
       rating: 1,
       date: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString(),
-      text: "Very disappointed with my recent visit. The facility wasn't clean and the service was poor.",
+      text: "Very disappointed with my recent visit. The facility wasn't clean, and I found dust and debris in several areas. The staff was unprofessional and spent more time chatting with each other than helping patients. Will not be returning.",
       status: "flagged",
     },
     {
       id: "4",
       author: {
-        name: "David Wilson",
+        name: "Robert Martinez",
+        email: "robert@example.com",
       },
-      rating: 4,
+      rating: 2,
       date: new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString(),
-      text: "Great service overall, though the wait was a bit longer than expected. Staff was very helpful.",
-      status: "responded",
-      response:
-        "Thank you for your feedback, David! We appreciate your patience and are working on improving our wait times.",
+      text: "Prices have gone up significantly since my last visit with no improvement in service. $200 for a basic service is excessive. Looking for alternatives.",
+      status: "pending",
     },
     {
       id: "5",
       author: {
-        name: "Jennifer Martinez",
-        email: "jennifer@example.com",
+        name: "Jennifer Lee",
+        phone: "(555) 234-5678",
       },
-      rating: 3,
+      rating: 5,
       date: new Date(Date.now() - 96 * 60 * 60 * 1000).toISOString(),
-      text: "Average experience. Some things were good but there's definitely room for improvement.",
-      status: "pending",
+      text: "Amanda at the front desk is amazing! She remembered my name from my last visit and helped sort out an issue with my insurance right away. The whole team is professional and caring.",
+      status: "responded",
+      response:
+        "Thank you for the kind words, Jennifer! We're lucky to have Amanda on our team, and I'll make sure to share your feedback with her. We strive to provide personal attention to each of our clients, and it's wonderful to hear that it shows!",
     },
     {
       id: "6",
       author: {
-        name: "Robert Brown",
-        phone: "(555) 999-0000",
+        name: "David Wilson",
+        email: "david@example.com",
+        phone: "(555) 876-5432",
+      },
+      rating: 3,
+      date: new Date(Date.now() - 120 * 60 * 60 * 1000).toISOString(),
+      text: "Service itself was good but there were issues with the payment system and I had to wait 20 minutes for it to be resolved. Also, the online booking system was down when I tried to schedule.",
+      status: "pending",
+    },
+    {
+      id: "7",
+      author: {
+        name: "Maria Garcia",
+        email: "maria@example.com",
       },
       rating: 5,
-      date: new Date(Date.now() - 120 * 60 * 60 * 1000).toISOString(),
-      text: "Outstanding service! Everyone was professional and attentive. Will definitely come back!",
+      date: new Date(Date.now() - 144 * 60 * 60 * 1000).toISOString(),
+      text: "I've been coming here for 2 years and the quality has been consistently excellent. The staff is well-trained, the equipment is modern, and they're always on time. They also sent me a thoughtful birthday card last month - such a nice personal touch!",
       status: "responded",
       response:
-        "Thank you for your kind words, Robert! We look forward to serving you again soon.",
+        "Thank you for being such a loyal client, Maria! We're honored to have served you for the past 2 years. Our team loves adding personal touches, and we're glad the birthday card brightened your day. Here's to many more years of serving you!",
     },
   ];
 
@@ -156,7 +172,7 @@ const Reviews = () => {
         </p>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center justify-between">
         <div className="relative w-[300px]">
           <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
@@ -167,31 +183,46 @@ const Reviews = () => {
           />
         </div>
 
-        <Select value={filterBy} onValueChange={setFilterBy}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Filter by" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Reviews</SelectItem>
-            <SelectItem value="needs_response">Needs Response</SelectItem>
-            <SelectItem value="responded">Responded</SelectItem>
-            <SelectItem value="flagged">Flagged</SelectItem>
-            <SelectItem value="positive">Positive (4-5★)</SelectItem>
-            <SelectItem value="negative">Negative (1-2★)</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <SparklesIcon className="w-4 h-4 text-[#f5794d]" />
+            <span className="text-sm text-muted-foreground">
+              AI Auto-Response
+            </span>
+            <Switch
+              checked={settings.notifications.aiAutoResponse}
+              onCheckedChange={(checked) =>
+                updateNotificationSettings({ aiAutoResponse: checked })
+              }
+            />
+          </div>
 
-        <Select value={sortBy} onValueChange={setSortBy}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Sort by" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="newest">Newest First</SelectItem>
-            <SelectItem value="oldest">Oldest First</SelectItem>
-            <SelectItem value="rating-high">Highest Rating</SelectItem>
-            <SelectItem value="rating-low">Lowest Rating</SelectItem>
-          </SelectContent>
-        </Select>
+          <Select value={filterBy} onValueChange={setFilterBy}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Filter by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Reviews</SelectItem>
+              <SelectItem value="needs_response">Needs Response</SelectItem>
+              <SelectItem value="responded">Responded</SelectItem>
+              <SelectItem value="flagged">Flagged</SelectItem>
+              <SelectItem value="positive">Positive (4-5★)</SelectItem>
+              <SelectItem value="negative">Negative (1-2★)</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="newest">Newest First</SelectItem>
+              <SelectItem value="oldest">Oldest First</SelectItem>
+              <SelectItem value="rating-high">Highest Rating</SelectItem>
+              <SelectItem value="rating-low">Lowest Rating</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <div className="space-y-4">

@@ -41,19 +41,31 @@ const AdminSettings = () => {
 
       <Tabs defaultValue="general" className="space-y-6">
         <TabsList>
-          <TabsTrigger value="general">
+          <TabsTrigger
+            value="general"
+            className="data-[state=active]:text-[#f5794d]"
+          >
             <BuildingIcon className="w-4 h-4 mr-2" />
             General
           </TabsTrigger>
-          <TabsTrigger value="security">
+          <TabsTrigger
+            value="security"
+            className="data-[state=active]:text-[#f5794d]"
+          >
             <ShieldIcon className="w-4 h-4 mr-2" />
             Security
           </TabsTrigger>
-          <TabsTrigger value="notifications">
+          <TabsTrigger
+            value="notifications"
+            className="data-[state=active]:text-[#f5794d]"
+          >
             <BellIcon className="w-4 h-4 mr-2" />
             Notifications
           </TabsTrigger>
-          <TabsTrigger value="integrations">
+          <TabsTrigger
+            value="integrations"
+            className="data-[state=active]:text-[#f5794d]"
+          >
             <DatabaseIcon className="w-4 h-4 mr-2" />
             Integrations
           </TabsTrigger>

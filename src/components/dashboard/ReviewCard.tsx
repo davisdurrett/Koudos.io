@@ -1,6 +1,7 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
+import { useSettings } from "@/lib/contexts/settings-context";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SparklesIcon } from "lucide-react";
@@ -36,6 +37,7 @@ interface ReviewCardProps {
 
 const ReviewCard = ({ review, onRespond = () => {} }: ReviewCardProps) => {
   const [isEditorOpen, setIsEditorOpen] = React.useState(false);
+  const { settings } = useSettings();
   const [isRecoveryModalOpen, setIsRecoveryModalOpen] = React.useState(false);
 
   const handleSubmitResponse = (response: string) => {

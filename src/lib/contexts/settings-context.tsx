@@ -13,12 +13,22 @@ interface BusinessSettings {
   feedbackFormUrl: string;
 }
 
+interface AIResponseSettings {
+  tone: "professional" | "casual" | "friendly";
+  delay: number;
+  maxLength: number;
+  includeBusinessName: boolean;
+  customPrompt?: string;
+}
+
 interface NotificationSettings {
   emailEnabled: boolean;
   pushEnabled: boolean;
   soundEnabled: boolean;
+  aiAutoResponse: boolean;
   urgentRatingThreshold: number;
   responseReminders: boolean;
+  aiSettings: AIResponseSettings;
   reminderInterval: number;
   urgentNotifications: string[];
 }
@@ -44,8 +54,16 @@ const defaultSettings: Settings = {
     emailEnabled: true,
     pushEnabled: true,
     soundEnabled: true,
+    aiAutoResponse: false,
     urgentRatingThreshold: 2,
     responseReminders: true,
+    aiSettings: {
+      tone: "professional",
+      delay: 0,
+      maxLength: 500,
+      includeBusinessName: true,
+      customPrompt: "",
+    },
     reminderInterval: 24,
     urgentNotifications: [""],
   },

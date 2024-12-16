@@ -197,7 +197,7 @@ const ReviewRecoveryModal = ({
                 variant={recoveryStatus.callMade ? "default" : "outline"}
                 size="sm"
                 onClick={() => handleStatusToggle("call")}
-                className={`w-full ${recoveryStatus.callMade ? "bg-green-600" : ""}`}
+                className={`w-full ${recoveryStatus.callMade ? "bg-[#f5794d] hover:bg-[#e66b45]" : "hover:bg-[#f5794d]/10 hover:text-[#f5794d] hover:border-[#f5794d]"}`}
               >
                 {recoveryStatus.callMade ? (
                   <CheckCircleIcon className="w-4 h-4 mr-2" />
@@ -211,7 +211,7 @@ const ReviewRecoveryModal = ({
                 variant={recoveryStatus.emailSent ? "default" : "outline"}
                 size="sm"
                 onClick={() => handleStatusToggle("email")}
-                className={`w-full ${recoveryStatus.emailSent ? "bg-green-600" : ""}`}
+                className={`w-full ${recoveryStatus.emailSent ? "bg-[#f5794d] hover:bg-[#e66b45]" : "hover:bg-[#f5794d]/10 hover:text-[#f5794d] hover:border-[#f5794d]"}`}
               >
                 {recoveryStatus.emailSent ? (
                   <CheckCircleIcon className="w-4 h-4 mr-2" />
@@ -225,7 +225,7 @@ const ReviewRecoveryModal = ({
                 variant={recoveryStatus.discountOffered ? "default" : "outline"}
                 size="sm"
                 onClick={() => handleStatusToggle("discount")}
-                className={`w-full ${recoveryStatus.discountOffered ? "bg-green-600" : ""}`}
+                className={`w-full ${recoveryStatus.discountOffered ? "bg-[#f5794d] hover:bg-[#e66b45]" : "hover:bg-[#f5794d]/10 hover:text-[#f5794d] hover:border-[#f5794d]"}`}
               >
                 {recoveryStatus.discountOffered ? (
                   <CheckCircleIcon className="w-4 h-4 mr-2" />

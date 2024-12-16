@@ -3,9 +3,9 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/components/ui/use-toast";
 import { useSettings } from "@/lib/contexts/settings-context";
 import SupportPanel from "@/components/dashboard/SupportPanel";
@@ -18,6 +18,7 @@ import {
   MailIcon,
   HelpCircleIcon,
   ExternalLinkIcon,
+  CreditCardIcon,
 } from "lucide-react";
 import {
   Select,
@@ -28,6 +29,7 @@ import {
 } from "@/components/ui/select";
 import CRMConnector from "@/components/dashboard/CRMConnector";
 import GoogleBusinessConnector from "@/components/dashboard/integrations/GoogleBusinessConnector";
+import BillingPage from "./billing";
 
 const Settings = () => {
   const { toast } = useToast();
@@ -63,19 +65,38 @@ const Settings = () => {
 
       <Tabs defaultValue="organization" className="space-y-6">
         <TabsList>
-          <TabsTrigger value="organization">
+          <TabsTrigger
+            value="organization"
+            className="data-[state=active]:text-[#f5794d]"
+          >
             <BuildingIcon className="w-4 h-4 mr-2" />
             Organization
           </TabsTrigger>
-          <TabsTrigger value="notifications">
+          <TabsTrigger
+            value="notifications"
+            className="data-[state=active]:text-[#f5794d]"
+          >
             <BellIcon className="w-4 h-4 mr-2" />
             Notifications
           </TabsTrigger>
-          <TabsTrigger value="integrations">
+          <TabsTrigger
+            value="integrations"
+            className="data-[state=active]:text-[#f5794d]"
+          >
             <DatabaseIcon className="w-4 h-4 mr-2" />
             Integrations
           </TabsTrigger>
-          <TabsTrigger value="support">
+          <TabsTrigger
+            value="billing"
+            className="data-[state=active]:text-[#f5794d]"
+          >
+            <CreditCardIcon className="w-4 h-4 mr-2" />
+            Billing
+          </TabsTrigger>
+          <TabsTrigger
+            value="support"
+            className="data-[state=active]:text-[#f5794d]"
+          >
             <HelpCircleIcon className="w-4 h-4 mr-2" />
             Support
           </TabsTrigger>
@@ -280,6 +301,11 @@ const Settings = () => {
               <GoogleBusinessConnector className="mt-6" />
             </div>
           </Card>
+        </TabsContent>
+
+        {/* Billing Tab */}
+        <TabsContent value="billing">
+          <BillingPage />
         </TabsContent>
 
         {/* Support Tab */}

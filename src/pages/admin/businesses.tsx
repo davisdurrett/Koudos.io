@@ -1,4 +1,5 @@
 import React from "react";
+import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,11 +21,13 @@ import {
 } from "@/components/ui/select";
 import {
   SearchIcon,
+  PlusIcon,
   BuildingIcon,
+  StarIcon,
+  UsersIcon,
   DollarSignIcon,
-  ArrowUpIcon,
-  MoreVerticalIcon,
   LogInIcon,
+  MoreVerticalIcon,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -35,146 +38,129 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const AdminDashboard = () => {
-  const [businesses] = React.useState([
+interface Business {
+  id: string;
+  name: string;
+  owner: string;
+  email: string;
+  plan: "free" | "pro" | "enterprise";
+  status: "active" | "inactive" | "pending";
+  users: number;
+  reviews: number;
+  avgRating: number;
+  revenue: number;
+  joinedAt: string;
+}
+
+const AdminBusinesses = () => {
+  const [businesses, setBusinesses] = React.useState<Business[]>([
     {
       id: "1",
       name: "Acme Corp",
       owner: "John Smith",
       email: "john@acme.com",
-      plan: "monthly",
+      plan: "pro",
       status: "active",
-      revenue: 49,
-      nextBilling: new Date(
-        Date.now() + 30 * 24 * 60 * 60 * 1000,
-      ).toISOString(),
+      users: 25,
+      reviews: 156,
+      avgRating: 4.8,
+      revenue: 2500,
+      joinedAt: "2024-01-15",
     },
     {
       id: "2",
       name: "TechStart Inc",
       owner: "Sarah Johnson",
       email: "sarah@techstart.com",
-      plan: "annually",
+      plan: "enterprise",
       status: "active",
-      revenue: 490,
-      nextBilling: new Date(
-        Date.now() + 30 * 24 * 60 * 60 * 1000,
-      ).toISOString(),
+      users: 50,
+      reviews: 312,
+      avgRating: 4.6,
+      revenue: 5000,
+      joinedAt: "2024-02-01",
     },
   ]);
 
-  const handleLoginAsBusiness = (businessId: string) => {
-    localStorage.setItem("currentBusinessId", businessId);
+  const handleLoginAsBusiness = (business: Business) => {
+    // Store business context
+    localStorage.setItem("currentBusinessId", business.id);
+    localStorage.setItem("currentBusinessName", business.name);
+    // Redirect to dashboard
     window.location.href = "/";
   };
 
   return (
     <div className="p-6 space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-semibold tracking-tight">
-            Admin Dashboard
-          </h2>
+          <h2 className="text-2xl font-semibold tracking-tight">Businesses</h2>
           <p className="text-sm text-muted-foreground">
-            Monitor and manage all businesses
+            Manage and monitor business accounts
           </p>
         </div>
+        <Button>
+          <PlusIcon className="w-4 h-4 mr-2" />
+          Add Business
+        </Button>
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-4 gap-4">
         <Card className="p-4">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">
-                Monthly Revenue
-              </p>
-              <p className="text-2xl font-bold mt-2">$539</p>
-              <p className="text-sm text-green-600 flex items-center mt-1">
-                <ArrowUpIcon className="w-3 h-3 mr-1" />
-                12% vs last month
-              </p>
-            </div>
-            <div className="p-2 bg-green-100 rounded-full">
-              <DollarSignIcon className="w-4 h-4 text-green-600" />
-            </div>
-          </div>
+          <h3 className="text-sm font-medium text-muted-foreground">
+            Total Businesses
+          </h3>
+          <p className="text-2xl font-bold mt-2">{businesses.length}</p>
         </Card>
-
         <Card className="p-4">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">
-                Active Businesses
-              </p>
-              <p className="text-2xl font-bold mt-2">{businesses.length}</p>
-              <p className="text-sm text-green-600 flex items-center mt-1">
-                <ArrowUpIcon className="w-3 h-3 mr-1" />2 new this month
-              </p>
-            </div>
-            <div className="p-2 bg-blue-100 rounded-full">
-              <BuildingIcon className="w-4 h-4 text-blue-600" />
-            </div>
-          </div>
+          <h3 className="text-sm font-medium text-muted-foreground">
+            Total Users
+          </h3>
+          <p className="text-2xl font-bold mt-2">
+            {businesses.reduce((sum, b) => sum + b.users, 0)}
+          </p>
         </Card>
-
         <Card className="p-4">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">
-                Total Revenue
-              </p>
-              <p className="text-2xl font-bold mt-2">
-                $
-                {businesses
-                  .reduce((sum, b) => sum + b.revenue, 0)
-                  .toLocaleString()}
-              </p>
-              <p className="text-sm text-green-600 flex items-center mt-1">
-                <ArrowUpIcon className="w-3 h-3 mr-1" />
-                8% growth
-              </p>
-            </div>
-            <div className="p-2 bg-purple-100 rounded-full">
-              <DollarSignIcon className="w-4 h-4 text-purple-600" />
-            </div>
-          </div>
+          <h3 className="text-sm font-medium text-muted-foreground">
+            Total Revenue
+          </h3>
+          <p className="text-2xl font-bold mt-2">
+            $
+            {businesses.reduce((sum, b) => sum + b.revenue, 0).toLocaleString()}
+          </p>
+        </Card>
+        <Card className="p-4">
+          <h3 className="text-sm font-medium text-muted-foreground">
+            Avg Rating
+          </h3>
+          <p className="text-2xl font-bold mt-2">
+            {(
+              businesses.reduce((sum, b) => sum + b.avgRating, 0) /
+              businesses.length
+            ).toFixed(1)}
+          </p>
         </Card>
       </div>
 
-      {/* Filters */}
       <div className="flex items-center justify-between">
         <div className="relative w-[300px]">
           <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input placeholder="Search businesses..." className="pl-9" />
         </div>
-        <div className="flex items-center gap-2">
-          <Select defaultValue="all">
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Filter by plan" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Plans</SelectItem>
-              <SelectItem value="monthly">Monthly ($49/mo)</SelectItem>
-              <SelectItem value="annually">Annual ($490/yr)</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select defaultValue="all">
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Filter by status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="inactive">Inactive</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <Select defaultValue="all">
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Filter by status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Businesses</SelectItem>
+            <SelectItem value="active">Active</SelectItem>
+            <SelectItem value="inactive">Inactive</SelectItem>
+            <SelectItem value="pending">Pending</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
-      {/* Businesses Table */}
       <Card>
         <Table>
           <TableHeader>
@@ -182,8 +168,10 @@ const AdminDashboard = () => {
               <TableHead>Business</TableHead>
               <TableHead>Plan</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Users</TableHead>
+              <TableHead>Reviews</TableHead>
               <TableHead>Revenue</TableHead>
-              <TableHead>Next Billing</TableHead>
+              <TableHead>Joined</TableHead>
               <TableHead></TableHead>
             </TableRow>
           </TableHeader>
@@ -206,28 +194,42 @@ const AdminDashboard = () => {
                 <TableCell>
                   <Badge
                     variant="secondary"
-                    className={
-                      business.plan === "annually"
+                    className={cn(
+                      business.plan === "enterprise"
                         ? "bg-purple-100 text-purple-800"
-                        : "bg-blue-100 text-blue-800"
-                    }
+                        : business.plan === "pro"
+                          ? "bg-blue-100 text-blue-800"
+                          : "bg-gray-100 text-gray-800",
+                    )}
                   >
-                    {business.plan === "annually"
-                      ? "Annual Plan"
-                      : "Monthly Plan"}
+                    {business.plan}
                   </Badge>
                 </TableCell>
                 <TableCell>
                   <Badge
                     variant="secondary"
-                    className={
+                    className={cn(
                       business.status === "active"
                         ? "bg-green-100 text-green-800"
-                        : "bg-red-100 text-red-800"
-                    }
+                        : business.status === "pending"
+                          ? "bg-yellow-100 text-yellow-800"
+                          : "bg-gray-100 text-gray-800",
+                    )}
                   >
                     {business.status}
                   </Badge>
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-1">
+                    <UsersIcon className="w-4 h-4 text-muted-foreground" />
+                    {business.users}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-1">
+                    <StarIcon className="w-4 h-4 text-yellow-400" />
+                    {business.avgRating} ({business.reviews})
+                  </div>
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-1">
@@ -236,7 +238,7 @@ const AdminDashboard = () => {
                   </div>
                 </TableCell>
                 <TableCell>
-                  {new Date(business.nextBilling).toLocaleDateString()}
+                  {new Date(business.joinedAt).toLocaleDateString()}
                 </TableCell>
                 <TableCell>
                   <DropdownMenu>
@@ -249,13 +251,12 @@ const AdminDashboard = () => {
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
-                        onClick={() => handleLoginAsBusiness(business.id)}
+                        onClick={() => handleLoginAsBusiness(business)}
                       >
                         <LogInIcon className="w-4 h-4 mr-2" />
                         Login as Business
                       </DropdownMenuItem>
                       <DropdownMenuItem>View Details</DropdownMenuItem>
-                      <DropdownMenuItem>Edit Settings</DropdownMenuItem>
                       <DropdownMenuItem className="text-red-600">
                         Deactivate Business
                       </DropdownMenuItem>
@@ -271,4 +272,4 @@ const AdminDashboard = () => {
   );
 };
 
-export default AdminDashboard;
+export default AdminBusinesses;

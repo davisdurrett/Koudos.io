@@ -11,6 +11,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useSettings } from "@/lib/contexts/settings-context";
 import {
   ThumbsUpIcon,
   ThumbsDownIcon,
@@ -33,38 +34,124 @@ const AIResponseEditor = ({
   isOpen = true,
   onClose = () => {},
   onSubmit = () => {},
-  reviewText = "Great service and friendly staff! The food was delicious and arrived quickly.",
+  reviewText = "",
   customerName = "John",
   rating = 5,
   initialResponse = "",
 }: AIResponseEditorProps) => {
+  const { settings } = useSettings();
   const [selectedResponse, setSelectedResponse] =
     React.useState(initialResponse);
   const [activeTab, setActiveTab] = React.useState(
     initialResponse ? "custom" : "suggestions",
   );
+  const [selectedTone, setSelectedTone] = React.useState<"formal" | "casual">(
+    "formal",
+  );
 
   // Get first name only
   const firstName = customerName.split(" ")[0];
 
-  const suggestions = [
-    {
-      text:
-        rating >= 4
-          ? `Thank you for your wonderful ${rating}-star feedback, ${firstName}! We're delighted to hear that you enjoyed your experience with us. Our team takes great pride in delivering excellent service, and your kind words mean a lot to us. We appreciate you taking the time to share your thoughts!`
-          : `Thank you for your feedback, ${firstName}. We sincerely apologize that your experience didn't meet your expectations. We take all feedback seriously and would love to learn more about how we can improve. Please feel free to reach out to our customer service team directly so we can make things right.`,
-      tone: "Professional",
-      confidence: 0.95,
-    },
-    {
-      text:
-        rating >= 4
-          ? `Hi ${firstName}! 😊 We're so happy you had a great experience with us! Your ${rating}-star review means the world to us. Thank you for taking the time to share your feedback - we can't wait to serve you again soon!`
-          : `Hi ${firstName}, we're really sorry to hear about your experience. This isn't the level of service we aim to provide. We'd love to hear more about what went wrong and how we can make it right. Could you please reach out to us directly? We value your feedback and want to ensure a better experience next time.`,
-      tone: "Casual",
-      confidence: 0.88,
-    },
-  ];
+  // Extract key themes from review text
+  const getReviewThemes = () => {
+    const text = reviewText.toLowerCase();
+    const themes = [];
+
+    if (
+      text.includes("wait") ||
+      text.includes("slow") ||
+      text.includes("time")
+    ) {
+      themes.push("wait time");
+    }
+    if (
+      text.includes("staff") ||
+      text.includes("service") ||
+      text.includes("rude")
+    ) {
+      themes.push("service quality");
+    }
+    if (
+      text.includes("clean") ||
+      text.includes("dirty") ||
+      text.includes("mess")
+    ) {
+      themes.push("cleanliness");
+    }
+    if (
+      text.includes("price") ||
+      text.includes("expensive") ||
+      text.includes("cost")
+    ) {
+      themes.push("pricing");
+    }
+    return themes;
+  };
+
+  const generateResponse = (tone: "formal" | "casual") => {
+    const themes = getReviewThemes();
+    const businessName = settings.business.name || "our business";
+
+    if (rating >= 4) {
+      if (tone === "formal") {
+        return [
+          {
+            text: `Thank you for your wonderful ${rating}-star review, ${firstName}! We're delighted to hear about your positive experience${reviewText.includes("staff") ? ", especially regarding our staff" : ""} at ${businessName}. Your kind words mean a lot to our team, and we look forward to serving you again soon.`,
+            tone: "Professional",
+            confidence: 0.95,
+          },
+          {
+            text: `We greatly appreciate your ${rating}-star feedback, ${firstName}. ${reviewText.includes("service") ? "It's wonderful to hear that you received excellent service. " : ""}Your satisfaction is our top priority, and we're pleased that your experience met our high standards. Thank you for choosing ${businessName}.`,
+            tone: "Corporate",
+            confidence: 0.88,
+          },
+        ];
+      } else {
+        return [
+          {
+            text: `Hey ${firstName}! 😊 Thanks so much for the amazing ${rating}-star review! ${reviewText.includes("staff") ? "Our team will be thrilled to hear your kind words! " : ""}We love having customers like you and can't wait to see you again soon! 🌟`,
+            tone: "Friendly",
+            confidence: 0.95,
+          },
+          {
+            text: `You just made our day, ${firstName}! 🎉 Thank you for the awesome ${rating}-star review${reviewText.includes("service") ? " and for highlighting our great service" : ""}! We're so happy you had a great experience with us. Hope to see you back at ${businessName} soon! ⭐`,
+            tone: "Casual",
+            confidence: 0.88,
+          },
+        ];
+      }
+    } else {
+      if (tone === "formal") {
+        return [
+          {
+            text: `${firstName}, we sincerely apologize for your experience${themes.length > 0 ? ` with our ${themes.join(" and ")}` : ""}. We have already addressed this with our team${themes.includes("service quality") ? " to improve our service standards" : ""}${themes.includes("wait time") ? " and adjusted our staffing to reduce wait times" : ""}. We value your feedback and will use it to ensure a better experience for all our customers.`,
+            tone: "Professional",
+            confidence: 0.95,
+          },
+          {
+            text: `${firstName}, thank you for bringing this to our attention. We take full responsibility for the issues${themes.length > 0 ? ` with ${themes.join(" and ")}` : ""}. We have implemented immediate changes${themes.includes("cleanliness") ? " to our cleaning protocols" : ""}${themes.includes("service quality") ? " to our service standards" : ""} to prevent this from happening again.`,
+            tone: "Corporate",
+            confidence: 0.88,
+          },
+        ];
+      } else {
+        return [
+          {
+            text: `${firstName}, we're really sorry about the issues${themes.length > 0 ? ` with our ${themes.join(" and ")}` : ""}. 😔 We've already made changes${themes.includes("service quality") ? " to improve our service" : ""} to make sure this doesn't happen again. Thanks for helping us get better!`,
+            tone: "Friendly",
+            confidence: 0.95,
+          },
+          {
+            text: `${firstName}, thanks for letting us know about this. We're sorry we dropped the ball${themes.length > 0 ? ` on ${themes.join(" and ")}` : ""}. 😔 We've already fixed these issues and made improvements to do better going forward.`,
+            tone: "Casual",
+            confidence: 0.88,
+          },
+        ];
+      }
+    }
+  };
+
+  const suggestions = generateResponse(selectedTone);
 
   const handleSuggestionClick = (suggestion: string) => {
     setSelectedResponse(suggestion);
@@ -98,6 +185,24 @@ const AIResponseEditor = ({
               </span>
             </div>
             <p className="text-sm mt-2">{reviewText}</p>
+          </div>
+
+          {/* Tone Selection */}
+          <div className="flex justify-end">
+            <Tabs
+              value={selectedTone}
+              onValueChange={(v) => setSelectedTone(v as "formal" | "casual")}
+              className="w-[400px]"
+            >
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="formal" className="text-sm">
+                  Professional Tone
+                </TabsTrigger>
+                <TabsTrigger value="casual" className="text-sm">
+                  Casual Tone
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
           </div>
 
           {/* Response Editor Tabs */}
